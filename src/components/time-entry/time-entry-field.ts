@@ -1,6 +1,7 @@
 import { parseTime, formatTime, generateTimeOptions, ParsedTime } from '../../shared/parse-time';
+import { applyTokenDefaults } from '../../shared/token-defaults';
 
-const style = `
+const style = applyTokenDefaults(`
 :host {
   display: block;
 }
@@ -47,24 +48,28 @@ input[data-disabled] {
 }
 
 .dropdown {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
+  position: fixed;
   max-height: 240px;
   overflow-y: auto;
   background: var(--background);
   border: 1px solid var(--border);
-  border-top: none;
-  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
   box-shadow: var(--shadow-3);
   display: none;
-  z-index: 1000;
-  margin-top: -1px;
+  z-index: 2000;
 }
 
 .dropdown[data-open] {
   display: block;
+}
+
+.dropdown[data-placement="below"] {
+  border-top: none;
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+}
+
+.dropdown[data-placement="above"] {
+  border-bottom: none;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
 }
 
 .suggestion {
@@ -98,7 +103,7 @@ input[data-disabled] {
 .error[data-visible] {
   display: block;
 }
-`;
+`);
 
 export class TimeEntryField extends HTMLElement {
   private shadow: ShadowRoot;
@@ -265,9 +270,37 @@ export class TimeEntryField extends HTMLElement {
     this.closeDropdown();
   }
 
+  private positionDropdown() {
+    const inputRect = this.input.getBoundingClientRect();
+    const dropdownMaxHeight = 240;
+    const viewportHeight = window.innerHeight;
+    const spaceBelow = viewportHeight - inputRect.bottom;
+    const spaceAbove = inputRect.top;
+
+    const width = inputRect.width;
+
+    if (spaceBelow >= dropdownMaxHeight || spaceBelow >= spaceAbove) {
+      // Position below the input
+      this.dropdown.setAttribute('data-placement', 'below');
+      this.dropdown.style.top = (inputRect.bottom - 1) + 'px';
+      this.dropdown.style.bottom = 'auto';
+      this.dropdown.style.maxHeight = Math.min(dropdownMaxHeight, spaceBelow) + 'px';
+    } else {
+      // Position above the input — more room above
+      this.dropdown.setAttribute('data-placement', 'above');
+      this.dropdown.style.bottom = (viewportHeight - inputRect.top - 1) + 'px';
+      this.dropdown.style.top = 'auto';
+      this.dropdown.style.maxHeight = Math.min(dropdownMaxHeight, spaceAbove) + 'px';
+    }
+
+    this.dropdown.style.left = inputRect.left + 'px';
+    this.dropdown.style.width = width + 'px';
+  }
+
   private openDropdown() {
     if (this.isOpen) return;
     this.isOpen = true;
+    this.positionDropdown();
     this.dropdown.setAttribute('data-open', '');
 
     // Find nearest option to current input value; if no input, start at first
@@ -284,6 +317,7 @@ export class TimeEntryField extends HTMLElement {
   private closeDropdown() {
     this.isOpen = false;
     this.dropdown.removeAttribute('data-open');
+    this.dropdown.removeAttribute('data-placement');
     this.activeIndex = -1;
   }
 

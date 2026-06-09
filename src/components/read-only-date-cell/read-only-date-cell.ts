@@ -1,27 +1,20 @@
 import { formatDate } from '../../shared/format-date';
+import { applyTokenDefaults } from '../../shared/token-defaults';
 
-const style = `
+const style = applyTokenDefaults(`
 :host {
   display: block;
 }
 
 .cell {
-  padding: 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--background);
   font-family: var(--font-sans);
   font-size: 14px;
   color: var(--text);
   cursor: default;
   user-select: none;
-  min-height: 44px;
-  display: flex;
-  align-items: center;
 }
 
 .value {
-  flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -30,7 +23,7 @@ const style = `
 .value[data-empty] {
   color: var(--text-dim);
 }
-`;
+`);
 
 export class ReadOnlyDateCell extends HTMLElement {
   private shadow: ShadowRoot;
@@ -55,8 +48,6 @@ export class ReadOnlyDateCell extends HTMLElement {
 
     this.cellElement.setAttribute('part', 'cell');
     this.cellElement.classList.add('cell');
-    this.cellElement.setAttribute('role', 'status');
-    this.cellElement.setAttribute('aria-live', 'polite');
 
     this.valueElement.setAttribute('part', 'value');
     this.valueElement.classList.add('value');

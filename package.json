@@ -1,14 +1,21 @@
 {
   "name": "@albert/date-picker",
   "version": "0.1.0",
-  "type": "module",
   "description": "Native Web Components for date and datetime selection across Angular, Lit, and React",
+  "files": [
+    "dist",
+    "angular"
+  ],
+  "main": "dist/albert-date-picker.js",
+  "module": "dist/albert-date-picker.js",
   "exports": {
     ".": {
       "import": "./dist/albert-date-picker.js"
     },
     "./angular": {
-      "import": "./dist/albert-date-picker-angular.js"
+      "import": "./angular/index.js",
+      "default": "./angular/index.js",
+      "types": "./angular/index.d.ts"
     }
   },
   "scripts": {
@@ -18,6 +25,9 @@
     "test:watch": "playwright test --ui"
   },
   "devDependencies": {
+    "@angular/common": "^10.2.5",
+    "@angular/core": "^10.2.5",
+    "@angular/forms": "^10.2.5",
     "@playwright/test": "1.36.0",
     "@types/node": "^16.0.0",
     "esbuild": "0.17.0",

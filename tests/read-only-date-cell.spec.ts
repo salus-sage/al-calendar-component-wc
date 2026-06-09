@@ -97,12 +97,14 @@ test.describe('ReadOnlyDateCell', () => {
     expect(hasEmptyAttr).toBe(false);
   });
 
-  test('should have role="status" on cell element', async ({ page }) => {
+  test('cell element has no interactive role (Q4)', async ({ page }) => {
+    // Q4: role="status" + aria-live were semantically incorrect on a static
+    // read-only cell — the corrected element carries no role attribute
     const role = await page.locator('#test-cell').evaluate((el: any) => {
       return el.shadowRoot?.querySelector('.cell')?.getAttribute('role');
     });
 
-    expect(role).toBe('status');
+    expect(role).toBeNull();
   });
 
   test('should handle 12:00 AM (midnight) correctly', async ({ page }) => {

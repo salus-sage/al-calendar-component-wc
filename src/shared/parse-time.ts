@@ -126,7 +126,15 @@ export function timeToIso(date: Date, time: ParsedTime): string {
   const hoursStr = String(hours24).padStart(2, '0');
   const minutes = String(time.minutes).padStart(2, '0');
 
-  return `${year}-${month}-${day}T${hoursStr}:${minutes}:00`;
+  // Compute local UTC offset for this specific date (handles DST correctly)
+  const localDate = new Date(year, date.getMonth(), date.getDate(), hours24, time.minutes, 0);
+  const offsetTotalMinutes = -localDate.getTimezoneOffset();
+  const offsetSign = offsetTotalMinutes >= 0 ? '+' : '-';
+  const absOffset = Math.abs(offsetTotalMinutes);
+  const offsetHH = String(Math.floor(absOffset / 60)).padStart(2, '0');
+  const offsetMM = String(absOffset % 60).padStart(2, '0');
+
+  return `${year}-${month}-${day}T${hoursStr}:${minutes}:00${offsetSign}${offsetHH}:${offsetMM}`;
 }
 
 export function generateTimeOptions(): ParsedTime[] {

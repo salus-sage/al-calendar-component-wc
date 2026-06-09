@@ -12,7 +12,8 @@ import {
 } from '@angular/forms';
 
 @Directive({
-  selector: 'albert-datetime-picker[formControl], albert-datetime-picker[ngModel]',
+  // formControlName added so this directive activates inside [formGroup] bindings
+  selector: 'albert-datetime-picker[formControl], albert-datetime-picker[ngModel], albert-datetime-picker[formControlName]',
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
@@ -20,7 +21,6 @@ import {
       multi: true,
     },
   ],
-  standalone: true,
 })
 export class DateTimePickerFieldCvaDirective
   implements ControlValueAccessor, OnInit, OnDestroy
@@ -40,32 +40,37 @@ export class DateTimePickerFieldCvaDirective
   private onChange: (value: string | null) => void = () => {};
   private onTouched: () => void = () => {};
   private changeListener: ((e: Event) => void) | null = null;
+  private blurListener: (() => void) | null = null;
 
   constructor(private elementRef: ElementRef<HTMLElement>) {}
 
   ngOnInit() {
-    this.setupEventListener();
+    this.setupEventListeners();
   }
 
   ngOnDestroy() {
-    if (this.changeListener && this.elementRef.nativeElement) {
-      this.elementRef.nativeElement.removeEventListener(
-        '_albert-change',
-        this.changeListener
-      );
+    const el = this.elementRef.nativeElement;
+    if (this.changeListener) {
+      el.removeEventListener('albert-change', this.changeListener);
+    }
+    if (this.blurListener) {
+      el.removeEventListener('blur', this.blurListener);
     }
   }
 
-  private setupEventListener() {
+  private setupEventListeners() {
+    const el = this.elementRef.nativeElement;
+
     this.changeListener = (e: Event) => {
-      const customEvent = e as CustomEvent;
-      const value = customEvent.detail?.value || null;
+      const value = (e as CustomEvent).detail?.value || null;
       this.onChange(value);
+      // onTouched is NOT called here — it fires on blur so that validation
+      // error messages only appear after the user leaves the field.
     };
-    this.elementRef.nativeElement.addEventListener(
-      '_albert-change',
-      this.changeListener
-    );
+    el.addEventListener('albert-change', this.changeListener);
+
+    this.blurListener = () => this.onTouched();
+    el.addEventListener('blur', this.blurListener);
   }
 
   writeValue(value: string | null) {
@@ -85,8 +90,10 @@ export class DateTimePickerFieldCvaDirective
   }
 
   setDisabledState(isDisabled: boolean) {
-    const editable = !isDisabled;
-    this.elementRef.nativeElement.setAttribute('is-editable', editable.toString());
+    this.elementRef.nativeElement.setAttribute(
+      'is-editable',
+      (!isDisabled).toString()
+    );
   }
 
   private setRequired(value: boolean) {

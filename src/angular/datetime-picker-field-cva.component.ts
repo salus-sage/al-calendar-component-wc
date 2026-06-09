@@ -1,10 +1,10 @@
 import {
+  AfterViewInit,
   Component,
   ElementRef,
   forwardRef,
   Input,
   OnDestroy,
-  OnInit,
   ViewChild,
 } from '@angular/core';
 import {
@@ -24,7 +24,7 @@ import {
   ],
 })
 export class DateTimePickerFieldCvaComponent
-  implements ControlValueAccessor, OnInit, OnDestroy
+  implements ControlValueAccessor, AfterViewInit, OnDestroy
 {
   @ViewChild('picker', { static: false }) pickerRef!: ElementRef;
 
@@ -35,38 +35,56 @@ export class DateTimePickerFieldCvaComponent
   private onChange: (value: string | null) => void = () => {};
   private onTouched: () => void = () => {};
   private changeListener: ((e: Event) => void) | null = null;
+  private blurListener: (() => void) | null = null;
+
+  // Angular forms calls writeValue() before ngAfterViewInit when pickerRef is
+  // still null (static: false ViewChild). Buffer it and flush after the view init.
+  private pendingValue: string | null | undefined = undefined;
 
   constructor(private elementRef: ElementRef) {}
 
-  ngOnInit() {}
-
-  ngOnDestroy() {
-    if (this.changeListener && this.pickerRef) {
-      this.pickerRef.nativeElement.removeEventListener(
-        '_albert-change',
-        this.changeListener
-      );
+  ngAfterViewInit() {
+    this.applyInputs();
+    this.setupEventListeners();
+    if (this.pendingValue !== undefined) {
+      this.applyValue(this.pendingValue);
     }
   }
 
-  private setupEventListener() {
-    const pickerEl = this.pickerRef.nativeElement;
+  ngOnDestroy() {
+    if (this.pickerRef) {
+      const el = this.pickerRef.nativeElement;
+      if (this.changeListener) {
+        el.removeEventListener('albert-change', this.changeListener);
+      }
+      if (this.blurListener) {
+        el.removeEventListener('blur', this.blurListener);
+      }
+    }
+  }
+
+  private setupEventListeners() {
+    const el = this.pickerRef.nativeElement;
+
     this.changeListener = (e: Event) => {
-      const customEvent = e as CustomEvent;
-      const value = customEvent.detail?.value || null;
+      const value = (e as CustomEvent).detail?.value || null;
       this.onChange(value);
+      // onTouched is NOT called here — it fires on blur so that validation
+      // error messages only appear after the user leaves the field.
     };
-    pickerEl.addEventListener('_albert-change', this.changeListener);
+    el.addEventListener('albert-change', this.changeListener);
+
+    this.blurListener = () => this.onTouched();
+    el.addEventListener('blur', this.blurListener);
   }
 
   writeValue(value: string | null) {
     if (this.pickerRef) {
-      const pickerEl = this.pickerRef.nativeElement;
-      if (value) {
-        pickerEl.setAttribute('value', value);
-      } else {
-        pickerEl.removeAttribute('value');
-      }
+      this.applyValue(value);
+    } else {
+      // pickerRef not yet available (called before ngAfterViewInit); buffer and
+      // apply once the view has been initialised.
+      this.pendingValue = value;
     }
   }
 
@@ -80,26 +98,31 @@ export class DateTimePickerFieldCvaComponent
 
   setDisabledState(isDisabled: boolean) {
     if (this.pickerRef) {
-      const pickerEl = this.pickerRef.nativeElement;
-      const editable = !isDisabled;
-      pickerEl.setAttribute('is-editable', editable.toString());
+      this.pickerRef.nativeElement.setAttribute(
+        'is-editable',
+        (!isDisabled).toString()
+      );
     }
   }
 
-  ngAfterViewInit() {
-    this.applyInputs();
-    this.setupEventListener();
+  private applyValue(value: string | null) {
+    const el = this.pickerRef.nativeElement;
+    if (value) {
+      el.setAttribute('value', value);
+    } else {
+      el.removeAttribute('value');
+    }
   }
 
   private applyInputs() {
     if (!this.pickerRef) return;
-    const pickerEl = this.pickerRef.nativeElement;
+    const el = this.pickerRef.nativeElement;
     if (this.required) {
-      pickerEl.setAttribute('required', '');
+      el.setAttribute('required', '');
     }
     if (this.placeholder) {
-      pickerEl.setAttribute('placeholder', this.placeholder);
+      el.setAttribute('placeholder', this.placeholder);
     }
-    pickerEl.setAttribute('is-editable', this.isEditable.toString());
+    el.setAttribute('is-editable', this.isEditable.toString());
   }
 }

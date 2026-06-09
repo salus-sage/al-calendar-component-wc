@@ -631,4 +631,42 @@ test.describe('DatePickerPanel', () => {
 
     expect(firstPanelClosed).toBe(true);
   });
+
+  // Regression: re-opening panel must not duplicate shadow DOM content
+  test('footer buttons appear exactly once after panel is closed and reopened', async ({ page }) => {
+    await page.goto('/harness/index.html');
+    const result = await page.evaluate(async () => {
+      const field = document.createElement('albert-date-picker');
+      field.setAttribute('value', '2026-05-23');
+      field.id = 'test-field-reopen';
+      document.body.appendChild(field);
+
+      const openAndClose = async () => {
+        (field as any).openPanel?.();
+        await new Promise(r => setTimeout(r, 100));
+        const panel = document.querySelector('albert-date-picker-panel') as any;
+        panel?.close?.();
+        await new Promise(r => setTimeout(r, 100));
+      };
+
+      // Open and close twice to trigger connectedCallback twice
+      await openAndClose();
+      await openAndClose();
+
+      // Open a third time and inspect
+      (field as any).openPanel?.();
+      await new Promise(r => setTimeout(r, 100));
+
+      const panel = document.querySelector('albert-date-picker-panel');
+      const todayBtns = panel?.shadowRoot?.querySelectorAll('[part="today-btn"]');
+      const clearBtns = panel?.shadowRoot?.querySelectorAll('[part="clear-btn"]');
+      return {
+        todayCount: todayBtns?.length ?? 0,
+        clearCount: clearBtns?.length ?? 0,
+      };
+    });
+
+    expect(result.todayCount).toBe(1);
+    expect(result.clearCount).toBe(1);
+  });
 });

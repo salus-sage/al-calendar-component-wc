@@ -1,4 +1,5 @@
 import { panelRegistry } from '../../shared/panel-registry';
+import { applyTokenDefaults } from '../../shared/token-defaults';
 
 const caretLeftIcon = `<svg width="16" height="16" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
   <path d="M165.66,202.34a8,8,0,0,1-11.32,11.32l-80-80a8,8,0,0,1,0-11.32l80-80a8,8,0,0,1,11.32,11.32L91.31,128Z"/>
@@ -12,7 +13,7 @@ const caretDownIcon = `<svg width="16" height="16" viewBox="0 0 256 256" fill="c
   <path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80a8,8,0,0,1,11.32-11.32L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z"/>
 </svg>`;
 
-const style = `
+const style = applyTokenDefaults(`
 :host {
   display: none;
   --panel-width: 268px;
@@ -166,13 +167,10 @@ const style = `
   background: none;
   border: none;
   color: var(--text);
-  font-size: 13px;
-  padding: 8px 12px;
+  font-size: var(--font-size-sm);
   border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all 0.2s ease;
-  display: inline-flex;
-  justify-self: center;
   font-weight: 500;
 }
 
@@ -187,47 +185,54 @@ const style = `
   color: white;
 }
 
-.month-pill[data-current],
-.year-pill[data-current] {
-  background: var(--slate-90);
+.month-pill[data-current]:not([data-selected]),
+.year-pill[data-current]:not([data-selected]) {
+  background: var(--secondary);
+}
+.py-1 {
+  padding-block: calc(var(--spacing-sm) * 1);
 }
 
+.px-3 {
+  padding-inline: calc(var(--spacing-sm) * 3);
+}
+
+.px-4 {
+  padding-inline: calc(var(--spacing-sm) * 4);
+}
 .footer {
   display: flex;
-  gap: 8px;
+  justify-content: space-between;
   padding: 12px;
   border-top: 1px solid var(--border);
 }
 
 .today-btn,
 .clear-btn {
-  flex: 1;
   background: none;
-  border: 1px solid var(--cobalt-50);
+  border: none;
   color: var(--cobalt-50);
-  padding: 8px 12px;
-  border-radius: var(--radius-sm);
-  font-size: 12px;
+  padding: 0;
+  font-size: 13px;
   cursor: pointer;
-  transition: all 0.2s ease;
   font-weight: 500;
+  transition: opacity 0.2s ease;
 }
 
 .today-btn:hover,
 .clear-btn:hover {
-  background: var(--cobalt-50);
-  color: white;
+  opacity: 0.75;
 }
 
 .today-btn:active,
 .clear-btn:active {
-  opacity: 0.8;
+  opacity: 0.6;
 }
 
 [hidden] {
   display: none !important;
 }
-`;
+`);
 
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const weekdays = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
@@ -253,13 +258,18 @@ export class DatePickerPanel extends HTMLElement {
   private view: 'day' | 'month' | 'year' = 'day';
   private documentClickListener: ((e: Event) => void) | null = null;
   private documentKeyListener: ((e: KeyboardEvent) => void) | null = null;
+  private scrollResizeListener: (() => void) | null = null;
 
   constructor() {
     super();
     this.shadow = this.attachShadow({ mode: 'open' });
   }
 
+  private _rendered = false;
+
   connectedCallback() {
+    if (this._rendered) return;
+    this._rendered = true;
     this.render();
     this.setupInternalListeners();
   }
@@ -276,6 +286,9 @@ export class DatePickerPanel extends HTMLElement {
     this.panelElement = document.createElement('div');
     this.panelElement.setAttribute('part', 'panel');
     this.panelElement.className = 'panel';
+    this.panelElement.setAttribute('role', 'dialog');
+    this.panelElement.setAttribute('aria-modal', 'true');
+    this.panelElement.setAttribute('aria-label', 'Date picker');
 
     // Header
     this.headerElement = document.createElement('div');
@@ -375,6 +388,60 @@ export class DatePickerPanel extends HTMLElement {
     this.yearBtn.addEventListener('click', () => this.switchToYearView());
     this.todayBtn.addEventListener('click', () => this.handleTodayClick());
     this.clearBtn.addEventListener('click', () => this.handleClearClick());
+    this.setupDayKeyboard();
+  }
+
+  // S2 — arrow-key roving-tabindex navigation within the day grid
+  private setupDayKeyboard(): void {
+    this.panelElement!.addEventListener('keydown', (e: KeyboardEvent) => {
+      const active = this.shadow.activeElement as HTMLButtonElement | null;
+      if (!active?.classList.contains('day-cell')) return;
+
+      const cells = Array.from(
+        this.dayGridElement!.querySelectorAll<HTMLButtonElement>('.day-cell'),
+      );
+      const idx = cells.indexOf(active);
+      if (idx === -1) return;
+
+      let nextIdx: number;
+      if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        nextIdx = idx + 1;
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        nextIdx = idx - 1;
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        nextIdx = idx + 7;
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        nextIdx = idx - 7;
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        active.click();
+        return;
+      } else {
+        return;
+      }
+
+      if (nextIdx >= 0 && nextIdx < cells.length) {
+        cells[idx].tabIndex = -1;
+        cells[nextIdx].tabIndex = 0;
+        cells[nextIdx].focus();
+      }
+    });
+  }
+
+  // S4 — set roving tabindex on day cells; called after every renderDayView()
+  private initializeFocusedCell(): void {
+    const cells = Array.from(
+      this.dayGridElement!.querySelectorAll<HTMLButtonElement>('.day-cell'),
+    );
+    cells.forEach((c) => (c.tabIndex = -1));
+    const selected = cells.find((c) => c.hasAttribute('data-selected'));
+    const firstNonAdjacent = cells.find((c) => !c.hasAttribute('data-adjacent'));
+    const toFocus = selected ?? firstNonAdjacent ?? cells[0];
+    if (toFocus) toFocus.tabIndex = 0;
   }
 
   private renderDayView() {
@@ -426,6 +493,7 @@ export class DatePickerPanel extends HTMLElement {
 
     this.dayGridElement.appendChild(daysContainer);
     this.updateHeaderForDay();
+    this.initializeFocusedCell();
   }
 
   private createDayCell(date: Date, isAdjacent: boolean) {
@@ -462,15 +530,14 @@ export class DatePickerPanel extends HTMLElement {
     this.monthGridElement.innerHTML = '';
     const year = this.currentDate.getFullYear();
     const currentMonth = new Date().getMonth();
-    const currentYear = new Date().getFullYear();
 
     months.forEach((monthName, index) => {
       const btn = document.createElement('button');
-      btn.className = 'month-pill';
+      btn.className = 'month-pill py-1 px-3';
       btn.setAttribute('part', 'month-pill');
       btn.textContent = monthName;
 
-      const isCurrentMonth = index === currentMonth && year === currentYear;
+      const isCurrentMonth = index === currentMonth;
       const isSelected =
         this.selectedDate &&
         index === this.selectedDate.getMonth() &&
@@ -508,7 +575,7 @@ export class DatePickerPanel extends HTMLElement {
 
     for (let year = startYear; year <= endYear; year++) {
       const btn = document.createElement('button');
-      btn.className = 'year-pill';
+      btn.className = 'year-pill py-1 px-4';
       btn.setAttribute('part', 'year-pill');
       btn.textContent = year.toString();
 
@@ -700,6 +767,12 @@ export class DatePickerPanel extends HTMLElement {
       this.updateVisibleViews();
       this.renderDayView();
 
+      // S4 — focus the day cell before visibility is hidden for positioning
+      const focusTarget = this.dayGridElement?.querySelector<HTMLElement>(
+        '[tabindex="0"]',
+      );
+      focusTarget?.focus();
+
       this.panelElement.style.visibility = 'hidden';
       requestAnimationFrame(() => {
         this.updatePosition();
@@ -713,6 +786,10 @@ export class DatePickerPanel extends HTMLElement {
 
   close() {
     this.removeDocumentListeners();
+    // S6 — notify field so it can reset aria-expanded
+    this.dispatchEvent(
+      new CustomEvent('_albert-close', { bubbles: false, composed: false }),
+    );
     if (this.parentElement === document.body) {
       document.body.removeChild(this);
     }
@@ -740,8 +817,12 @@ export class DatePickerPanel extends HTMLElement {
       }
     };
 
+    this.scrollResizeListener = () => this.updatePosition();
+
     document.addEventListener('pointerdown', this.documentClickListener);
     document.addEventListener('keydown', this.documentKeyListener);
+    window.addEventListener('scroll', this.scrollResizeListener, { capture: true, passive: true });
+    window.addEventListener('resize', this.scrollResizeListener, { passive: true });
   }
 
   private removeDocumentListeners() {
@@ -750,6 +831,11 @@ export class DatePickerPanel extends HTMLElement {
     }
     if (this.documentKeyListener) {
       document.removeEventListener('keydown', this.documentKeyListener);
+    }
+    if (this.scrollResizeListener) {
+      window.removeEventListener('scroll', this.scrollResizeListener, { capture: true });
+      window.removeEventListener('resize', this.scrollResizeListener);
+      this.scrollResizeListener = null;
     }
   }
 }

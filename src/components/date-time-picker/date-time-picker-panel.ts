@@ -1,5 +1,7 @@
-import { parseTime, formatTime, timeToIso, generateTimeOptions, ParsedTime } from '../../shared/parse-time';
+import { parseTime, formatTime, timeToIso, ParsedTime } from '../../shared/parse-time';
 import { panelRegistry } from '../../shared/panel-registry';
+import '../../components/time-entry/time-entry-field';
+import { applyTokenDefaults } from '../../shared/token-defaults';
 
 const caretLeftIcon = `<svg width="16" height="16" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
   <path d="M165.66,202.34a8,8,0,0,1-11.32,11.32l-80-80a8,8,0,0,1,0-11.32l80-80a8,8,0,0,1,11.32,11.32L91.31,128Z"/>
@@ -13,7 +15,7 @@ const caretDownIcon = `<svg width="16" height="16" viewBox="0 0 256 256" fill="c
   <path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80a8,8,0,0,1,11.32-11.32L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z"/>
 </svg>`;
 
-const style = `
+const style = applyTokenDefaults(`
 :host {
   display: none;
   --panel-width: 268px;
@@ -189,16 +191,22 @@ const style = `
   background: none;
   border: none;
   color: var(--text);
-  font-size: 13px;
-  padding: 8px 12px;
+  font-size: var(--font-size-sm);
   border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all 0.2s ease;
-  display: inline-flex;
-  justify-self: center;
   font-weight: 500;
 }
+.py-1 {
+  padding-block: calc(var(--spacing-sm) * 1);
+}
 
+.px-3 {
+  padding-inline: calc(var(--spacing-sm) * 3);
+}
+.px-4 {
+  padding-inline: calc(var(--spacing-sm) * 4);
+}
 .month-pill:hover,
 .year-pill:hover {
   background: var(--cobalt-95);
@@ -212,40 +220,41 @@ const style = `
 
 .month-pill[data-current],
 .year-pill[data-current] {
-  background: var(--slate-90);
+  background: var(--cobalt-50);
+  color: white;
 }
 
 .footer {
   display: flex;
-  gap: 8px;
+  justify-content: space-between;
   padding: 12px;
   border-top: 1px solid var(--border);
 }
 
 .footer-btn {
-  flex: 1;
   background: none;
-  border: 1px solid var(--border);
-  color: var(--text);
+  border: none;
+  color: var(--cobalt-50);
   font-size: 13px;
   cursor: pointer;
-  padding: 6px 12px;
-  border-radius: var(--radius-sm);
-  transition: all 0.2s ease;
+  padding: 0;
   font-weight: 500;
+  transition: opacity 0.2s ease;
 }
 
 .footer-btn:hover {
-  background: var(--cobalt-95);
-  border-color: var(--cobalt-50);
+  opacity: 0.75;
 }
-
 
 .footer-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
-`;
+
+[hidden] {
+  display: none !important;
+}
+`);
 
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const weekdays = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
@@ -265,7 +274,7 @@ export class DateTimePickerPanel extends HTMLElement {
   private clearBtn: HTMLButtonElement | undefined;
   private headerElement: HTMLElement | undefined;
   private timeSectionElement: HTMLElement | undefined;
-  private timeEntryInput: HTMLInputElement | undefined;
+  private timeEntryInput: HTMLElement | undefined;   // albert-time-entry
   private timezoneDisplay: HTMLElement | undefined;
 
   private currentDate = new Date();
@@ -275,13 +284,18 @@ export class DateTimePickerPanel extends HTMLElement {
   private view: 'day' | 'month' | 'year' = 'day';
   private documentClickListener: ((e: Event) => void) | null = null;
   private documentKeyListener: ((e: KeyboardEvent) => void) | null = null;
+  private scrollResizeListener: (() => void) | null = null;
 
   constructor() {
     super();
     this.shadow = this.attachShadow({ mode: 'open' });
   }
 
+  private _rendered = false;
+
   connectedCallback() {
+    if (this._rendered) return;
+    this._rendered = true;
     this.render();
     this.setupInternalListeners();
   }
@@ -298,16 +312,18 @@ export class DateTimePickerPanel extends HTMLElement {
     this.panelElement = document.createElement('div');
     this.panelElement.setAttribute('part', 'panel');
     this.panelElement.className = 'panel';
+    this.panelElement.setAttribute('role', 'dialog');
+    this.panelElement.setAttribute('aria-modal', 'true');
+    this.panelElement.setAttribute('aria-label', 'Date and time picker');
 
     // Time section (shown only in day view)
     this.timeSectionElement = document.createElement('div');
     this.timeSectionElement.className = 'time-section';
     this.timeSectionElement.setAttribute('data-hidden', '');
 
-    this.timeEntryInput = document.createElement('input');
-    this.timeEntryInput.setAttribute('type', 'text');
+    this.timeEntryInput = document.createElement('albert-time-entry');
     this.timeEntryInput.setAttribute('placeholder', 'Enter time');
-    this.timeEntryInput.setAttribute('aria-label', 'Time entry');
+    // aria-label is handled inside albert-time-entry's own shadow DOM
 
     this.timezoneDisplay = document.createElement('div');
     this.timezoneDisplay.className = 'timezone-display';
@@ -349,10 +365,12 @@ export class DateTimePickerPanel extends HTMLElement {
     // Month view
     this.monthGridElement = document.createElement('div');
     this.monthGridElement.className = 'month-grid';
+    this.monthGridElement.setAttribute('hidden', '');
 
     // Year view
     this.yearGridElement = document.createElement('div');
     this.yearGridElement.className = 'year-grid';
+    this.yearGridElement.setAttribute('hidden', '');
 
     // Footer
     const footerElement = document.createElement('div');
@@ -370,11 +388,11 @@ export class DateTimePickerPanel extends HTMLElement {
     footerElement.appendChild(this.nowBtn);
     footerElement.appendChild(this.clearBtn);
 
-    this.panelElement.appendChild(this.timeSectionElement);
     this.panelElement.appendChild(this.headerElement);
     this.panelElement.appendChild(this.dayGridElement);
     this.panelElement.appendChild(this.monthGridElement);
     this.panelElement.appendChild(this.yearGridElement);
+    this.panelElement.appendChild(this.timeSectionElement);
     this.panelElement.appendChild(footerElement);
 
     this.shadow.appendChild(styleEl);
@@ -387,6 +405,10 @@ export class DateTimePickerPanel extends HTMLElement {
     this.dayGridElement.innerHTML = '';
     this.monthGridElement.innerHTML = '';
     this.yearGridElement.innerHTML = '';
+
+    this.dayGridElement.removeAttribute('hidden');
+    this.monthGridElement.setAttribute('hidden', '');
+    this.yearGridElement.setAttribute('hidden', '');
 
     this.timeSectionElement.removeAttribute('data-hidden');
 
@@ -443,6 +465,7 @@ export class DateTimePickerPanel extends HTMLElement {
         btn.setAttribute('data-selected', '');
       }
 
+      btn.tabIndex = -1;
       btn.addEventListener('click', () => this.selectDate(cellDate));
       this.dayGridElement.appendChild(btn);
     }
@@ -458,12 +481,18 @@ export class DateTimePickerPanel extends HTMLElement {
       btn.disabled = true;
       this.dayGridElement.appendChild(btn);
     }
+
+    this.initializeFocusedCell();
   }
 
   private renderMonth() {
     this.dayGridElement.innerHTML = '';
     this.monthGridElement.innerHTML = '';
     this.yearGridElement.innerHTML = '';
+
+    this.dayGridElement.setAttribute('hidden', '');
+    this.monthGridElement.removeAttribute('hidden');
+    this.yearGridElement.setAttribute('hidden', '');
 
     this.timeSectionElement.setAttribute('data-hidden', '');
 
@@ -483,13 +512,13 @@ export class DateTimePickerPanel extends HTMLElement {
 
     months.forEach((month, index) => {
       const btn = document.createElement('button');
-      btn.className = 'month-pill';
+      btn.className = 'month-pill py-1 px-3';
       btn.textContent = month;
 
       if (this.selectedDate && this.selectedDate.getFullYear() === year && this.selectedDate.getMonth() === index) {
         btn.setAttribute('data-selected', '');
       }
-      if (currentMonth === index && currentYear === year) {
+      if (currentMonth === index) {
         btn.setAttribute('data-current', '');
       }
 
@@ -502,6 +531,10 @@ export class DateTimePickerPanel extends HTMLElement {
     this.dayGridElement.innerHTML = '';
     this.monthGridElement.innerHTML = '';
     this.yearGridElement.innerHTML = '';
+
+    this.dayGridElement.setAttribute('hidden', '');
+    this.monthGridElement.setAttribute('hidden', '');
+    this.yearGridElement.removeAttribute('hidden');
 
     this.timeSectionElement.setAttribute('data-hidden', '');
 
@@ -520,7 +553,7 @@ export class DateTimePickerPanel extends HTMLElement {
 
     for (let year = decade; year < decade + 10; year++) {
       const btn = document.createElement('button');
-      btn.className = 'year-pill';
+      btn.className = 'year-pill py-1 px-4';
       btn.textContent = String(year);
 
       if (this.selectedDate && this.selectedDate.getFullYear() === year) {
@@ -541,9 +574,82 @@ export class DateTimePickerPanel extends HTMLElement {
     this.monthYearBtn.addEventListener('click', () => this.switchToMonth());
     this.nowBtn.addEventListener('click', () => this.selectNow());
     this.clearBtn.addEventListener('click', () => this.selectClear());
-    this.timeEntryInput.addEventListener('input', () => this.handleTimeInput());
-    this.timeEntryInput.addEventListener('blur', () => this.commitTime());
-    this.timeEntryInput.addEventListener('keydown', (e) => this.handleTimeKeydown(e));
+
+    // albert-time-entry handles its own input/blur/keydown internally.
+    // We only need to listen for the committed change event it fires.
+    this.timeEntryInput.addEventListener('_albert-change', (e: Event) => {
+      this.onTimeEntryChange(e as CustomEvent);
+    });
+
+    this.setupDayKeyboard();
+  }
+
+  // S2 — arrow-key roving-tabindex navigation within the day grid
+  private setupDayKeyboard(): void {
+    this.panelElement!.addEventListener('keydown', (e: KeyboardEvent) => {
+      const active = this.shadow.activeElement as HTMLButtonElement | null;
+      if (!active?.classList.contains('day-cell')) return;
+
+      // Skip disabled (other-month) cells during navigation
+      const cells = Array.from(
+        this.dayGridElement!.querySelectorAll<HTMLButtonElement>(
+          '.day-cell:not(:disabled)',
+        ),
+      );
+      const idx = cells.indexOf(active);
+      if (idx === -1) return;
+
+      let nextIdx: number;
+      if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        nextIdx = idx + 1;
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        nextIdx = idx - 1;
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        nextIdx = idx + 7;
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        nextIdx = idx - 7;
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        active.click();
+        return;
+      } else {
+        return;
+      }
+
+      if (nextIdx >= 0 && nextIdx < cells.length) {
+        cells[idx].tabIndex = -1;
+        cells[nextIdx].tabIndex = 0;
+        cells[nextIdx].focus();
+      }
+    });
+  }
+
+  // S4 — set roving tabindex; called after renderDay()
+  private initializeFocusedCell(): void {
+    const cells = Array.from(
+      this.dayGridElement!.querySelectorAll<HTMLButtonElement>(
+        '.day-cell:not(:disabled)',
+      ),
+    );
+    cells.forEach((c) => (c.tabIndex = -1));
+    const selected = cells.find((c) => c.hasAttribute('data-selected'));
+    const toFocus = selected ?? cells[0];
+    if (toFocus) toFocus.tabIndex = 0;
+  }
+
+  private onTimeEntryChange(e: CustomEvent) {
+    const raw = e.detail?.value as string;
+    const parsed = raw ? parseTime(raw) : null;
+    this.selectedTime = parsed ?? null;
+
+    if (this.selectedDate && this.selectedTime) {
+      const datetime = timeToIso(this.selectedDate, this.selectedTime);
+      this.dispatchChangeEvent(datetime);
+    }
   }
 
   private switchToYear() {
@@ -599,7 +705,7 @@ export class DateTimePickerPanel extends HTMLElement {
     this.currentDate = new Date(date);
     if (!this.selectedTime) {
       this.selectedTime = this.getCurrentTime();
-      this.timeEntryInput.value = formatTime(this.selectedTime);
+      this.timeEntryInput.setAttribute('value', formatTime(this.selectedTime));
     }
     this.renderDay();
     const datetime = timeToIso(this.selectedDate, this.selectedTime!);
@@ -611,43 +717,25 @@ export class DateTimePickerPanel extends HTMLElement {
     this.selectedDate = new Date(now);
     this.currentDate = new Date(now);
     this.selectedTime = this.getCurrentTime();
-    this.timeEntryInput.value = formatTime(this.selectedTime);
+
+    // setAttribute triggers albert-time-entry's attributeChangedCallback
+    this.timeEntryInput.setAttribute('value', formatTime(this.selectedTime));
+
+    const datetime = timeToIso(this.selectedDate, this.selectedTime);
+    this.dispatchChangeEvent(datetime);
     this.close();
   }
 
   private selectClear() {
     this.selectedDate = null;
-    this.selectedTime = this.getCurrentTime();
-    this.timeEntryInput.value = '';
+    this.selectedTime = null;
     this.currentDate = new Date();
+
+    // removeAttribute clears albert-time-entry's input via attributeChangedCallback
+    this.timeEntryInput.removeAttribute('value');
+
     this.renderDay();
     this.dispatchChangeEvent(null);
-  }
-
-  private handleTimeInput() {
-    const parsed = parseTime(this.timeEntryInput.value);
-    if (parsed) {
-      this.selectedTime = parsed;
-    }
-  }
-
-  private handleTimeKeydown(e: KeyboardEvent) {
-    if (e.key === 'Enter') {
-      this.commitTime();
-      e.preventDefault();
-    } else if (e.key === 'Escape') {
-      this.timeEntryInput.value = this.selectedTime ? formatTime(this.selectedTime) : '';
-    }
-  }
-
-  private commitTime() {
-    if (this.selectedDate && this.timeEntryInput.value) {
-      const parsed = parseTime(this.timeEntryInput.value);
-      if (parsed) {
-        this.selectedTime = parsed;
-        this.timeEntryInput.value = formatTime(parsed);
-      }
-    }
   }
 
   private updateView() {
@@ -700,7 +788,7 @@ export class DateTimePickerPanel extends HTMLElement {
   }
 
   private dispatchChangeEvent(value: string | null) {
-    const event = new CustomEvent('_albert-change', {
+    const event = new CustomEvent('albert-change', {
       bubbles: true,
       composed: true,
       detail: { value },
@@ -715,12 +803,25 @@ export class DateTimePickerPanel extends HTMLElement {
     if (this.documentKeyListener) {
       document.removeEventListener('keydown', this.documentKeyListener);
     }
+    if (this.scrollResizeListener) {
+      window.removeEventListener('scroll', this.scrollResizeListener, { capture: true });
+      window.removeEventListener('resize', this.scrollResizeListener);
+      this.scrollResizeListener = null;
+    }
   }
 
   private close() {
-    this.style.display = 'none';
     this.removeDocumentListeners();
+    // S6 — notify field so it can reset aria-expanded
+    this.dispatchEvent(
+      new CustomEvent('_albert-close', { bubbles: false, composed: false }),
+    );
+    if (this.parentElement === document.body) {
+      document.body.removeChild(this);
+    }
+    this.style.display = 'none';
     panelRegistry.unregister(this);
+    this.anchorElement?.focus();
   }
 
   public open(anchorElement: HTMLElement, initialValue?: string) {
@@ -747,7 +848,11 @@ export class DateTimePickerPanel extends HTMLElement {
 
     requestAnimationFrame(() => {
       this.timeSectionElement.removeAttribute('data-hidden');
-      this.timeEntryInput.value = this.selectedTime ? formatTime(this.selectedTime) : '';
+      if (this.selectedTime) {
+        this.timeEntryInput.setAttribute('value', formatTime(this.selectedTime));
+      } else {
+        this.timeEntryInput.removeAttribute('value');
+      }
 
       this.renderDay();
 
@@ -771,49 +876,60 @@ export class DateTimePickerPanel extends HTMLElement {
         }
       };
 
+      this.scrollResizeListener = () => this.updatePosition();
+
       document.addEventListener('click', this.documentClickListener);
       document.addEventListener('keydown', this.documentKeyListener);
+      window.addEventListener('scroll', this.scrollResizeListener, { capture: true, passive: true });
+      window.addEventListener('resize', this.scrollResizeListener, { passive: true });
 
-      const rect = anchorElement.getBoundingClientRect();
-      const viewportHeight = window.innerHeight;
-      const viewportWidth = window.innerWidth;
-      const gapSize = 8;
+      // S4 — move focus into the day grid after first rAF renders content
+      const focusTarget = this.dayGridElement?.querySelector<HTMLElement>(
+        '[tabindex="0"]',
+      );
+      focusTarget?.focus();
 
-      // Use panel CSS width variable as default, measure if available
-      const panelHeight = 400;
-      const panelWidth = 268;
+      // Second rAF: layout is complete, safe to measure real panel height
+      requestAnimationFrame(() => {
+        const rect = anchorElement.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+        const viewportWidth = window.innerWidth;
+        const gapSize = 8;
 
-      // Determine vertical position: prefer above if field is in bottom half
-      const midpoint = viewportHeight / 2;
-      let topPosition: number;
+        // Measure actual rendered height — falls back only if layout hasn't run
+        const panelHeight = this.panelElement?.offsetHeight ?? 400;
+        const panelWidth = 268;
 
-      if (rect.top > midpoint) {
-        // Field is in bottom half - try to position above
-        topPosition = rect.top - panelHeight - gapSize;
-        // If that goes off-screen, position below instead
-        if (topPosition < 0) {
+        // Determine vertical position: prefer above if field is in bottom half
+        const midpoint = viewportHeight / 2;
+        let topPosition: number;
+
+        if (rect.top > midpoint) {
+          // Field is in bottom half - try to position above
+          topPosition = rect.top - panelHeight - gapSize;
+          // If that goes off-screen, position below instead
+          if (topPosition < 0) {
+            topPosition = rect.bottom + gapSize;
+          }
+        } else {
+          // Field is in top half - position below
           topPosition = rect.bottom + gapSize;
         }
-      } else {
-        // Field is in top half - position below
-        topPosition = rect.bottom + gapSize;
-      }
 
-      // Determine horizontal position: try to align with field left, but keep on screen
-      let leftPosition = rect.left;
-      if (leftPosition + panelWidth > viewportWidth) {
-        // Panel would overflow right edge - shift left
-        leftPosition = viewportWidth - panelWidth - gapSize;
-      }
-      if (leftPosition < 0) {
-        // Panel would overflow left edge - shift right
-        leftPosition = gapSize;
-      }
+        // Determine horizontal position: try to align with field left, but keep on screen
+        let leftPosition = rect.left;
+        if (leftPosition + panelWidth > viewportWidth) {
+          leftPosition = viewportWidth - panelWidth - gapSize;
+        }
+        if (leftPosition < 0) {
+          leftPosition = gapSize;
+        }
 
-      this.style.position = 'fixed';
-      this.style.display = 'block';
-      this.style.top = topPosition + 'px';
-      this.style.left = leftPosition + 'px';
+        this.style.position = 'fixed';
+        this.style.display = 'block';
+        this.style.top = topPosition + 'px';
+        this.style.left = leftPosition + 'px';
+      });
     });
 
     panelRegistry.register(this);

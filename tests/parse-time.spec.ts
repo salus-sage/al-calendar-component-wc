@@ -92,11 +92,36 @@ test.describe('parseTime utility', () => {
 
   test('should convert time to ISO format', () => {
     const date = new Date('2026-05-23');
-    expect(timeToIso(date, { hours: 3, minutes: 30, meridiem: 'PM' })).toBe('2026-05-23T15:30:00');
+    expect(timeToIso(date, { hours: 3, minutes: 30, meridiem: 'PM' })).toMatch(
+      /^2026-05-23T15:30:00[+-]\d{2}:\d{2}$/
+    );
   });
 
   test('should convert midnight correctly to ISO', () => {
     const date = new Date('2026-05-23');
-    expect(timeToIso(date, { hours: 12, minutes: 0, meridiem: 'AM' })).toBe('2026-05-23T00:00:00');
+    expect(timeToIso(date, { hours: 12, minutes: 0, meridiem: 'AM' })).toMatch(
+      /^2026-05-23T00:00:00[+-]\d{2}:\d{2}$/
+    );
+  });
+
+  test('timeToIso includes ±HH:MM UTC offset suffix', () => {
+    const date = new Date('2026-06-15');
+    const result = timeToIso(date, { hours: 9, minutes: 0, meridiem: 'AM' });
+    expect(result).toMatch(/^2026-06-15T09:00:00[+-]\d{2}:\d{2}$/);
+  });
+
+  test('timeToIso offset matches local timezone sign', () => {
+    const date = new Date('2026-06-15');
+    const result = timeToIso(date, { hours: 12, minutes: 0, meridiem: 'PM' });
+    // -getTimezoneOffset() gives the UTC offset in minutes (positive = UTC+)
+    const localOffset = -new Date().getTimezoneOffset();
+    const expectedSign = localOffset >= 0 ? '+' : '-';
+    expect(result).toContain(expectedSign);
+  });
+
+  test('timeToIso noon PM converts with UTC offset', () => {
+    const date = new Date('2026-12-25');
+    const result = timeToIso(date, { hours: 12, minutes: 0, meridiem: 'PM' });
+    expect(result).toMatch(/^2026-12-25T12:00:00[+-]\d{2}:\d{2}$/);
   });
 });

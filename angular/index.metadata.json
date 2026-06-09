@@ -1,0 +1,23 @@
+{
+  "__symbolic": "module",
+  "version": 4,
+  "metadata": {},
+  "exports": [
+    {
+      "from": "./date-picker.module"
+    },
+    {
+      "from": "./datetime-picker.module"
+    },
+    {
+      "from": "./date-picker-field-cva.directive"
+    },
+    {
+      "from": "./datetime-picker-field-cva.directive"
+    },
+    {
+      "from": "./datetime-picker-field-cva.component"
+    }
+  ],
+  "importAs": "@albert/date-picker/angular"
+}

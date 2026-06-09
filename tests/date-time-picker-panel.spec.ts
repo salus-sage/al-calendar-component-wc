@@ -84,16 +84,22 @@ test.describe('DateTimePickerPanel', () => {
       const panels = document.querySelectorAll('albert-date-time-picker-panel');
       const panel = panels[panels.length - 1];
 
-      const timeInput = panel.shadowRoot?.querySelector('.time-section input') as HTMLInputElement;
-      if (!timeInput) return null;
-      timeInput.value = '3:30pm';
-      timeInput.dispatchEvent(new Event('input', { bubbles: true }));
+      const timeEntry = panel.shadowRoot?.querySelector('.time-section albert-time-entry') as HTMLElement;
+      if (!timeEntry) return null;
+
+      // Set value attribute and fire _albert-change to simulate a committed entry
+      timeEntry.setAttribute('value', '3:30 PM');
+      timeEntry.dispatchEvent(new CustomEvent('_albert-change', {
+        bubbles: true,
+        composed: true,
+        detail: { value: '3:30 PM' },
+      }));
       await new Promise(r => setTimeout(r, 50));
 
-      return timeInput.value;
+      return timeEntry.getAttribute('value');
     });
 
-    expect(timeValue).toBe('3:30pm');
+    expect(timeValue).toBe('3:30 PM');
   });
 
   test('should navigate to month view and back', async ({ page }) => {
@@ -206,7 +212,29 @@ test.describe('DateTimePickerPanel', () => {
     expect(hasClearBtn).toBe(true);
   });
 
-  test('should emit _albert-change when day is selected', async ({ page }) => {
+  test('after open/close x3, document.body has 0 panel nodes', async ({ page }) => {
+    await page.goto('/harness/index.html');
+
+    const panelCount = await page.evaluate(async () => {
+      for (let i = 0; i < 3; i++) {
+        const field = document.createElement('albert-datetime-picker') as any;
+        field.setAttribute('value', '2026-05-23T15:30:00');
+        document.body.appendChild(field);
+        field.openPanel?.();
+        await new Promise(r => setTimeout(r, 120));
+
+        document.dispatchEvent(
+          new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })
+        );
+        await new Promise(r => setTimeout(r, 80));
+      }
+      return document.querySelectorAll('albert-date-time-picker-panel').length;
+    });
+
+    expect(panelCount).toBe(0);
+  });
+
+  test('should emit albert-change when day is selected', async ({ page }) => {
     await page.goto('/harness/index.html');
     await page.evaluate(async () => {
       const field = document.createElement('albert-datetime-picker');
@@ -222,7 +250,7 @@ test.describe('DateTimePickerPanel', () => {
       const panel = panels[panels.length - 1];
 
       let changeEvent: CustomEvent | null = null;
-      panel.addEventListener('_albert-change', (e) => {
+      panel.addEventListener('albert-change', (e) => {
         changeEvent = e as CustomEvent;
       });
 
@@ -255,13 +283,17 @@ test.describe('DateTimePickerPanel', () => {
       const panel = panels[panels.length - 1];
 
       let changeValue: string | null = null;
-      panel.addEventListener('_albert-change', (e: Event) => {
+      panel.addEventListener('albert-change', (e: Event) => {
         changeValue = (e as CustomEvent).detail?.value;
       });
 
-      const timeInput = panel.shadowRoot?.querySelector('.time-section input') as HTMLInputElement;
-      timeInput.value = '2:30pm';
-      timeInput.dispatchEvent(new Event('input', { bubbles: true }));
+      const timeEntry = panel.shadowRoot?.querySelector('.time-section albert-time-entry') as HTMLElement;
+      timeEntry?.setAttribute('value', '2:30 PM');
+      timeEntry?.dispatchEvent(new CustomEvent('_albert-change', {
+        bubbles: true,
+        composed: true,
+        detail: { value: '2:30 PM' },
+      }));
       await new Promise(r => setTimeout(r, 50));
 
       const dayCells = panel.shadowRoot?.querySelectorAll('.day-cell');
@@ -274,7 +306,7 @@ test.describe('DateTimePickerPanel', () => {
       return changeValue;
     });
 
-    expect(value).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/);
+    expect(value).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/);
   });
 
   test('should properly manage monthYearBtn in header across view changes', async ({ page }) => {
@@ -405,13 +437,17 @@ test.describe('DateTimePickerPanel', () => {
       const panel = panels[panels.length - 1];
 
       let changeValue: string | null = null;
-      panel.addEventListener('_albert-change', (e: Event) => {
+      panel.addEventListener('albert-change', (e: Event) => {
         changeValue = (e as CustomEvent).detail?.value;
       });
 
-      const timeInput = panel.shadowRoot?.querySelector('.time-section input') as HTMLInputElement;
-      timeInput.value = '2:30pm';
-      timeInput.dispatchEvent(new Event('input', { bubbles: true }));
+      const timeEntry = panel.shadowRoot?.querySelector('.time-section albert-time-entry') as HTMLElement;
+      timeEntry?.setAttribute('value', '2:30 PM');
+      timeEntry?.dispatchEvent(new CustomEvent('_albert-change', {
+        bubbles: true,
+        composed: true,
+        detail: { value: '2:30 PM' },
+      }));
       await new Promise(r => setTimeout(r, 50));
 
       const dayCells = panel.shadowRoot?.querySelectorAll('.day-cell');
@@ -443,13 +479,17 @@ test.describe('DateTimePickerPanel', () => {
       const panel = panels[panels.length - 1];
 
       let changeValue: string | null = null;
-      panel.addEventListener('_albert-change', (e: Event) => {
+      panel.addEventListener('albert-change', (e: Event) => {
         changeValue = (e as CustomEvent).detail?.value;
       });
 
-      const timeInput = panel.shadowRoot?.querySelector('.time-section input') as HTMLInputElement;
-      timeInput.value = '12:00am';
-      timeInput.dispatchEvent(new Event('input', { bubbles: true }));
+      const timeEntry = panel.shadowRoot?.querySelector('.time-section albert-time-entry') as HTMLElement;
+      timeEntry?.setAttribute('value', '12:00 AM');
+      timeEntry?.dispatchEvent(new CustomEvent('_albert-change', {
+        bubbles: true,
+        composed: true,
+        detail: { value: '12:00 AM' },
+      }));
       await new Promise(r => setTimeout(r, 50));
 
       const dayCells = panel.shadowRoot?.querySelectorAll('.day-cell');
@@ -615,55 +655,51 @@ test.describe('DateTimePickerPanel', () => {
     const panelStillOpen = await page.evaluate(async () => {
       const panels = document.querySelectorAll('albert-date-time-picker-panel');
       const panel = panels[panels.length - 1];
-      const timeInput = panel.shadowRoot?.querySelector('input[type="text"]') as HTMLInputElement;
+      const timeEntry = panel.shadowRoot?.querySelector('albert-time-entry') as HTMLElement;
+      // Click into albert-time-entry's inner input via shadowRoot
+      const innerInput = (timeEntry as any)?.shadowRoot?.querySelector('input') as HTMLInputElement;
 
-      if (!timeInput) return false;
+      if (!innerInput) return false;
 
-      // Click on the time input
-      timeInput.click();
+      innerInput.click();
       await new Promise(r => setTimeout(r, 50));
 
-      // Check if panel is still visible (for fixed positioned elements, offsetParent may be null)
       return panel.style.display !== 'none';
     });
 
     expect(panelStillOpen).toBe(true);
   });
 
-  test('should position panel above field when there is not enough space below', async ({ page }) => {
+  test('panel positioned ABOVE anchor in bottom 20% of viewport', async ({ page }) => {
     await page.goto('/harness/index.html');
 
-    // Scroll to bottom and create field near bottom
     await page.evaluate(async () => {
-      // Create a field near the bottom of the viewport
-      const field = document.createElement('albert-datetime-picker');
+      const field = document.createElement('albert-datetime-picker') as any;
       field.setAttribute('value', '2026-05-23T15:30:00');
-      field.id = 'test-field-bottom';
+      field.id = 'test-field-bottom-v2';
       field.style.position = 'fixed';
-      field.style.bottom = '50px';
+      field.style.bottom = '30px';
       field.style.left = '50px';
       document.body.appendChild(field);
-      (field as any).openPanel?.();
-      await new Promise(r => setTimeout(r, 100));
+      field.openPanel?.();
+      await new Promise(r => setTimeout(r, 150));
     });
 
-    const positionIsAbove = await page.evaluate(async () => {
-      const field = document.getElementById('test-field-bottom') as any;
-      const panels = document.querySelectorAll('albert-date-time-picker-panel');
-      const panel = panels[panels.length - 1];
-
-      if (!field || !panel) return false;
+    const result = await page.evaluate(() => {
+      const field = document.getElementById('test-field-bottom-v2') as HTMLElement;
+      const panel = document.querySelector('albert-date-time-picker-panel') as HTMLElement;
+      if (!field || !panel) return { ok: false, panelTop: -1, actualPanelHeight: -1 };
 
       const fieldRect = field.getBoundingClientRect();
-      const panelTop = parseInt(panel.style.top);
+      const panelTop = parseInt(panel.style.top, 10);
+      const panelEl = (panel as any).shadowRoot?.querySelector('.panel') as HTMLElement;
+      const actualPanelHeight = panelEl ? panelEl.offsetHeight : 400;
+      const panelBottomEdge = panelTop + actualPanelHeight;
 
-      // Panel should be positioned above the field (panel top + height < field top)
-      // For a ~400px panel, if field is at bottom 50px, panel top should be negative or small
-      // The key test: panel's bottom edge should be above field's top edge
-      return panelTop + 400 < fieldRect.top || panelTop < fieldRect.top;
+      return { ok: panelBottomEdge < fieldRect.top, panelTop, actualPanelHeight };
     });
 
-    expect(positionIsAbove).toBe(true);
+    expect(result.ok).toBe(true);
   });
 
   test('should not duplicate decade range element when navigating in year view', async ({ page }) => {
@@ -721,5 +757,165 @@ test.describe('DateTimePickerPanel', () => {
     expect(decadeRangeCount.initialCount).toBe(1);
     expect(decadeRangeCount.afterNavCount).toBe(1);
     expect(decadeRangeCount.afterSecondNavCount).toBe(1);
+  });
+});
+
+// ─── P3: TimeEntryField integration ──────────────────────────────────────────
+
+test.describe('TimeEntryField integration (P3)', () => {
+  async function openPanel(page: any, id: string, value = '2026-05-23T15:30:00') {
+    await page.goto('/harness/index.html');
+    await page.evaluate(async ({ id, value }: { id: string; value: string }) => {
+      const field = document.createElement('albert-datetime-picker') as any;
+      field.setAttribute('value', value);
+      field.id = id;
+      document.body.appendChild(field);
+      field.openPanel?.();
+      await new Promise(r => setTimeout(r, 150));
+    }, { id, value });
+  }
+
+  test('time section contains albert-time-entry, not a bare input', async ({ page }) => {
+    await openPanel(page, 'p3-test-1');
+
+    const result = await page.evaluate(() => {
+      const panel = document.querySelector('albert-date-time-picker-panel');
+      const timeSection = panel?.shadowRoot?.querySelector('.time-section');
+      return {
+        hasTimeEntry: !!timeSection?.querySelector('albert-time-entry'),
+        hasBareInput: !!timeSection?.querySelector('input'),
+      };
+    });
+
+    expect(result.hasTimeEntry).toBe(true);
+    expect(result.hasBareInput).toBe(false);
+  });
+
+  test('suggestion dropdown opens on focus', async ({ page }) => {
+    await openPanel(page, 'p3-test-2');
+
+    const dropdownVisible = await page.evaluate(async () => {
+      const panel = document.querySelector('albert-date-time-picker-panel');
+      const timeEntry = panel?.shadowRoot?.querySelector('albert-time-entry') as any;
+      if (!timeEntry) return false;
+      const input = timeEntry.shadowRoot?.querySelector('input');
+      input?.focus();
+      await new Promise(r => setTimeout(r, 60));
+      const dropdown = timeEntry.shadowRoot?.querySelector('.dropdown');
+      return dropdown?.hasAttribute('data-open') ?? false;
+    });
+
+    expect(dropdownVisible).toBe(true);
+  });
+
+  test('selecting a 15-min suggestion commits time', async ({ page }) => {
+    await openPanel(page, 'p3-test-3');
+
+    const committed = await page.evaluate(async () => {
+      const panel = document.querySelector('albert-date-time-picker-panel');
+      const timeEntry = panel?.shadowRoot?.querySelector('albert-time-entry');
+      if (!timeEntry) return null;
+      let lastChange: string | null = null;
+      timeEntry.addEventListener('_albert-change', (e: Event) => {
+        lastChange = (e as CustomEvent).detail?.value;
+      });
+      const input = timeEntry.shadowRoot?.querySelector('input') as HTMLInputElement;
+      input?.focus();
+      await new Promise(r => setTimeout(r, 60));
+      const suggestion = timeEntry.shadowRoot?.querySelectorAll('.suggestion')[2] as HTMLElement;
+      suggestion?.click();
+      await new Promise(r => setTimeout(r, 60));
+      return { committed: lastChange !== null, value: lastChange };
+    });
+
+    expect(committed?.committed).toBe(true);
+  });
+
+  test('typing 3pm and blurring commits as 3:00 PM', async ({ page }) => {
+    await openPanel(page, 'p3-test-4');
+
+    const result = await page.evaluate(async () => {
+      const panel = document.querySelector('albert-date-time-picker-panel');
+      const timeEntry = panel?.shadowRoot?.querySelector('albert-time-entry');
+      const input = timeEntry?.shadowRoot?.querySelector('input') as HTMLInputElement;
+      if (!input) return null;
+      input.focus();
+      input.value = '3pm';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      input.blur();
+      await new Promise(r => setTimeout(r, 100));
+      return timeEntry?.getAttribute('value');
+    });
+
+    expect(result).toBe('3:00 PM');
+  });
+
+  test('invalid time input reverts to last valid on blur', async ({ page }) => {
+    await openPanel(page, 'p3-test-5', '2026-05-23T14:30:00');
+
+    const result = await page.evaluate(async () => {
+      const panel = document.querySelector('albert-date-time-picker-panel');
+      const timeEntry = panel?.shadowRoot?.querySelector('albert-time-entry');
+      const input = timeEntry?.shadowRoot?.querySelector('input') as HTMLInputElement;
+      if (!input) return null;
+      input.focus();
+      input.value = 'not-a-time';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      input.blur();
+      await new Promise(r => setTimeout(r, 100));
+      return input.value;
+    });
+
+    expect(result).not.toBe('not-a-time');
+  });
+
+  test('Clear button empties time-entry value', async ({ page }) => {
+    await openPanel(page, 'p3-test-7', '2026-05-23T15:30:00');
+
+    const result = await page.evaluate(async () => {
+      const panel = document.querySelector('albert-date-time-picker-panel');
+      const timeEntry = panel?.shadowRoot?.querySelector('albert-time-entry');
+      const clearBtn = panel?.shadowRoot?.querySelector('.footer-btn:not([data-primary])') as HTMLButtonElement;
+      clearBtn?.click();
+      await new Promise(r => setTimeout(r, 60));
+      return timeEntry?.getAttribute('value') ?? '';
+    });
+
+    expect(result).toBe('');
+  });
+
+  // Regression: re-opening panel must not duplicate shadow DOM content
+  test('footer buttons appear exactly once after panel is closed and reopened', async ({ page }) => {
+    await page.goto('/harness/index.html');
+    const result = await page.evaluate(async () => {
+      const field = document.createElement('albert-datetime-picker');
+      field.setAttribute('value', '2026-05-23T15:30:00');
+      field.id = 'dt-reopen-test';
+      document.body.appendChild(field);
+
+      const openAndClose = async () => {
+        (field as any).openPanel?.();
+        await new Promise(r => setTimeout(r, 100));
+        const panel = document.querySelector('albert-date-time-picker-panel') as any;
+        panel?.close?.();
+        await new Promise(r => setTimeout(r, 100));
+      };
+
+      await openAndClose();
+      await openAndClose();
+
+      (field as any).openPanel?.();
+      await new Promise(r => setTimeout(r, 100));
+
+      const panel = document.querySelector('albert-date-time-picker-panel');
+      // DateTimePickerPanel uses "Now" (not "Today") and "Clear"
+      const allBtns = Array.from(panel?.shadowRoot?.querySelectorAll('button') ?? []);
+      const nowBtns = allBtns.filter(b => b.textContent?.trim() === 'Now');
+      const clearBtns = allBtns.filter(b => b.textContent?.trim() === 'Clear');
+      return { todayCount: nowBtns.length, clearCount: clearBtns.length };
+    });
+
+    expect(result.todayCount).toBe(1);
+    expect(result.clearCount).toBe(1);
   });
 });

@@ -25,5 +25,12 @@ class AlbertPickerRegistry {
   }
 }
 
-window.__albertPickerRegistry ??= new AlbertPickerRegistry();
-export const panelRegistry = window.__albertPickerRegistry;
+// SSR guard: only access `window` in browser environments
+if (typeof window !== 'undefined') {
+  window.__albertPickerRegistry ??= new AlbertPickerRegistry();
+}
+
+export const panelRegistry: AlbertPickerRegistry =
+  typeof window !== 'undefined'
+    ? window.__albertPickerRegistry
+    : new AlbertPickerRegistry();

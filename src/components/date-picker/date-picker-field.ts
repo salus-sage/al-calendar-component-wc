@@ -1,11 +1,12 @@
 import { formatDate } from '../../shared/format-date';
 import { DatePickerPanel } from './date-picker-panel';
+import { applyTokenDefaults } from '../../shared/token-defaults';
 
 const calendarIcon = `<svg width="20" height="20" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
   <path d="M208,32H188V24a8,8,0,0,0-16,0v8H84V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM72,48v8a8,8,0,0,0,16,0V48h88v8a8,8,0,0,0,16,0V48h20V80H52V48ZM208,208H48V96H208V208Z"/>
 </svg>`;
 
-const style = `
+const style = applyTokenDefaults(`
 :host {
   display: block;
 }
@@ -43,7 +44,7 @@ const style = `
 }
 
 .field[data-error] {
-  border-color: #d32f2f;
+  border-color: var(--error, #d32f2f);
 }
 
 .value {
@@ -75,14 +76,14 @@ const style = `
 .error {
   margin-top: 6px;
   font-size: 12px;
-  color: #d32f2f;
+  color: var(--error, #d32f2f);
   display: none;
 }
 
 .error[data-visible] {
   display: block;
 }
-`;
+`);
 
 export class DatePickerField extends HTMLElement {
   private shadow: ShadowRoot;
@@ -103,13 +104,12 @@ export class DatePickerField extends HTMLElement {
   connectedCallback() {
     this.render();
     this.setupEventListeners();
-    this.setupPanelListeners();
     this.updateState();
   }
 
   disconnectedCallback() {
-    if (this.panelChangeListener) {
-      document.removeEventListener('albert-change', this.panelChangeListener);
+    if (this.panel && this.panelChangeListener) {
+      this.panel.removeEventListener('albert-change', this.panelChangeListener);
     }
   }
 
@@ -121,7 +121,7 @@ export class DatePickerField extends HTMLElement {
     this.fieldElement.classList.add('field');
     this.fieldElement.setAttribute('tabindex', '0');
     this.fieldElement.setAttribute('role', 'button');
-    this.fieldElement.setAttribute('aria-haspopup', 'listbox');
+    this.fieldElement.setAttribute('aria-haspopup', 'dialog');
 
     this.valueElement.setAttribute('part', 'value');
     this.valueElement.classList.add('value');
@@ -176,16 +176,32 @@ export class DatePickerField extends HTMLElement {
       if (customEvent.detail?.value !== undefined) {
         this.setAttribute('value', customEvent.detail.value || '');
         this.updateState();
+        // Re-dispatch on the field element so Angular CVA directives hear the event
+        this.dispatchEvent(
+          new CustomEvent('albert-change', {
+            bubbles: true,
+            composed: true,
+            detail: customEvent.detail,
+          })
+        );
       }
     };
-    document.addEventListener('albert-change', this.panelChangeListener);
+    this.panel!.addEventListener('albert-change', this.panelChangeListener);
+
+    // S6 — reset aria-expanded when panel closes without selection
+    this.panel!.addEventListener('_albert-close', () => {
+      this.fieldElement.setAttribute('aria-expanded', 'false');
+    });
   }
 
   private openPanel() {
     if (!this.panel) {
       this.panel = new DatePickerPanel();
+      this.setupPanelListeners();
     }
     const currentValue = this.getAttribute('value');
+    // S6 — reflect open state immediately
+    this.fieldElement.setAttribute('aria-expanded', 'true');
     this.panel.open(this, currentValue || undefined);
   }
 
