@@ -7,7 +7,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-import { Component, ElementRef, forwardRef, Input, ViewChild, } from '@angular/core';
+import { Component, ElementRef, EventEmitter, forwardRef, Input, Output, ViewChild, } from '@angular/core';
 import { NG_VALUE_ACCESSOR, } from '@angular/forms';
 let DateTimePickerFieldCvaComponent = class DateTimePickerFieldCvaComponent {
     constructor(elementRef) {
@@ -15,6 +15,7 @@ let DateTimePickerFieldCvaComponent = class DateTimePickerFieldCvaComponent {
         this.required = false;
         this.placeholder = 'Select a date and time';
         this.isEditable = true;
+        this.valueChange = new EventEmitter();
         this.onChange = () => { };
         this.onTouched = () => { };
         this.changeListener = null;
@@ -47,6 +48,7 @@ let DateTimePickerFieldCvaComponent = class DateTimePickerFieldCvaComponent {
             var _a;
             const value = ((_a = e.detail) === null || _a === void 0 ? void 0 : _a.value) || null;
             this.onChange(value);
+            this.valueChange.emit(value);
             // onTouched is NOT called here — it fires on blur so that validation
             // error messages only appear after the user leaves the field.
         };
@@ -113,6 +115,10 @@ __decorate([
     Input(),
     __metadata("design:type", Object)
 ], DateTimePickerFieldCvaComponent.prototype, "isEditable", void 0);
+__decorate([
+    Output(),
+    __metadata("design:type", Object)
+], DateTimePickerFieldCvaComponent.prototype, "valueChange", void 0);
 DateTimePickerFieldCvaComponent = __decorate([
     Component({
         selector: 'albert-datetime-picker-cva',

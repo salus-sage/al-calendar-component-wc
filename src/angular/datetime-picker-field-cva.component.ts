@@ -2,9 +2,11 @@ import {
   AfterViewInit,
   Component,
   ElementRef,
+  EventEmitter,
   forwardRef,
   Input,
   OnDestroy,
+  Output,
   ViewChild,
 } from '@angular/core';
 import {
@@ -31,6 +33,8 @@ export class DateTimePickerFieldCvaComponent
   @Input() required = false;
   @Input() placeholder = 'Select a date and time';
   @Input() isEditable = true;
+
+  @Output() valueChange = new EventEmitter<string | null>();
 
   private onChange: (value: string | null) => void = () => {};
   private onTouched: () => void = () => {};
@@ -69,6 +73,7 @@ export class DateTimePickerFieldCvaComponent
     this.changeListener = (e: Event) => {
       const value = (e as CustomEvent).detail?.value || null;
       this.onChange(value);
+      this.valueChange.emit(value);
       // onTouched is NOT called here — it fires on blur so that validation
       // error messages only appear after the user leaves the field.
     };

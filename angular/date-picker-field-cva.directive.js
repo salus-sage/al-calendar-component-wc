@@ -7,7 +7,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-import { Directive, ElementRef, forwardRef, Input, } from '@angular/core';
+import { Directive, ElementRef, EventEmitter, forwardRef, Input, Output, } from '@angular/core';
 import { NG_VALUE_ACCESSOR, } from '@angular/forms';
 let DatePickerFieldCvaDirective = class DatePickerFieldCvaDirective {
     set required(value) {
@@ -21,6 +21,7 @@ let DatePickerFieldCvaDirective = class DatePickerFieldCvaDirective {
     }
     constructor(elementRef) {
         this.elementRef = elementRef;
+        this.valueChange = new EventEmitter();
         this.onChange = () => { };
         this.onTouched = () => { };
         this.changeListener = null;
@@ -44,6 +45,7 @@ let DatePickerFieldCvaDirective = class DatePickerFieldCvaDirective {
             var _a;
             const value = ((_a = e.detail) === null || _a === void 0 ? void 0 : _a.value) || null;
             this.onChange(value);
+            this.valueChange.emit(value);
             // onTouched is NOT called here — it fires on blur so that validation
             // error messages only appear after the user leaves the field.
         };
@@ -100,6 +102,10 @@ __decorate([
     __metadata("design:type", Boolean),
     __metadata("design:paramtypes", [Boolean])
 ], DatePickerFieldCvaDirective.prototype, "isEditable", null);
+__decorate([
+    Output(),
+    __metadata("design:type", Object)
+], DatePickerFieldCvaDirective.prototype, "valueChange", void 0);
 DatePickerFieldCvaDirective = __decorate([
     Directive({
         selector: 'albert-date-picker[formControl], albert-date-picker[ngModel], albert-date-picker[formControlName]',

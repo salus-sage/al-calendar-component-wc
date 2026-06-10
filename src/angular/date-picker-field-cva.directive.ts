@@ -1,10 +1,12 @@
 import {
   Directive,
   ElementRef,
+  EventEmitter,
   forwardRef,
   Input,
   OnDestroy,
   OnInit,
+  Output,
 } from '@angular/core';
 import {
   ControlValueAccessor,
@@ -36,6 +38,8 @@ export class DatePickerFieldCvaDirective
     this.setEditable(value);
   }
 
+  @Output() valueChange = new EventEmitter<string | null>();
+
   private onChange: (value: string | null) => void = () => {};
   private onTouched: () => void = () => {};
   private changeListener: ((e: Event) => void) | null = null;
@@ -63,6 +67,7 @@ export class DatePickerFieldCvaDirective
     this.changeListener = (e: Event) => {
       const value = (e as CustomEvent).detail?.value || null;
       this.onChange(value);
+      this.valueChange.emit(value);
       // onTouched is NOT called here — it fires on blur so that validation
       // error messages only appear after the user leaves the field.
     };

@@ -1,10 +1,11 @@
-import { ElementRef, OnDestroy, OnInit } from '@angular/core';
+import { ElementRef, EventEmitter, OnDestroy, OnInit } from '@angular/core';
 import { ControlValueAccessor } from '@angular/forms';
 export declare class DateTimePickerFieldCvaDirective implements ControlValueAccessor, OnInit, OnDestroy {
     private elementRef;
     set required(value: boolean);
     set placeholder(value: string);
     set isEditable(value: boolean);
+    valueChange: EventEmitter<string | null>;
     private onChange;
     private onTouched;
     private changeListener;

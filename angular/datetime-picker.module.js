@@ -8,13 +8,14 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { DateTimePickerFieldCvaComponent } from './datetime-picker-field-cva.component';
+import { DateTimePickerFieldCvaDirective } from './datetime-picker-field-cva.directive';
 let DateTimePickerModule = class DateTimePickerModule {
 };
 DateTimePickerModule = __decorate([
     NgModule({
-        declarations: [DateTimePickerFieldCvaComponent],
+        declarations: [DateTimePickerFieldCvaComponent, DateTimePickerFieldCvaDirective],
         imports: [CommonModule],
-        exports: [DateTimePickerFieldCvaComponent],
+        exports: [DateTimePickerFieldCvaComponent, DateTimePickerFieldCvaDirective],
         schemas: [CUSTOM_ELEMENTS_SCHEMA],
     })
 ], DateTimePickerModule);

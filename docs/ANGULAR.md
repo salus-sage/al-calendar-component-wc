@@ -79,6 +79,9 @@ export class ExampleComponent {
 - `placeholder: string` — Placeholder text (default: `"Select a date and time"`)
 - `isEditable: boolean` — Enable/disable the picker (default: `true`)
 
+**Outputs:**
+- `valueChange: EventEmitter<string | null>` — Emits the selected ISO 8601 string whenever the value changes, or `null` when cleared. Fires in addition to the standard CVA path — works alongside `formControl`, `ngModel`, or with no form binding at all.
+
 **Value format:** ISO 8601 datetime string (e.g. `2025-03-15T14:30:00`) or `null` when cleared.
 
 ---
@@ -187,6 +190,78 @@ export class ExampleComponent {
 - `placeholder: string`
 - `isEditable: boolean`
 
+**Outputs (both directives):**
+- `valueChange: EventEmitter<string | null>` — Emits the selected value string on every change, or `null` when cleared. Fires alongside the CVA `onChange` path so it works with `formControlName`, `formControl`, `ngModel`, or no form binding.
+
+---
+
+## Reacting to Value Changes
+
+All three wrappers expose a `(valueChange)` output that emits every time the user selects or clears a date. It works in every form scenario:
+
+### Alongside a reactive form control
+
+```html
+<albert-date-picker
+  [formControl]="dueDateControl"
+  (valueChange)="onDueDateChanged($event)">
+</albert-date-picker>
+```
+
+### Alongside `ngModel`
+
+```html
+<albert-date-picker
+  [(ngModel)]="selectedDate"
+  (valueChange)="onDateChanged($event)">
+</albert-date-picker>
+```
+
+### Without any form binding
+
+```html
+<albert-date-picker
+  (valueChange)="onDateChanged($event)">
+</albert-date-picker>
+```
+
+### Dynamic backend-driven forms
+
+When the form structure is determined at runtime from an API response and `FormControl` instances cannot be pre-declared, `(valueChange)` is the recommended pattern. Build a plain value map keyed by the field ID and update it on each change:
+
+```typescript
+// Fields driven by backend data
+fields: { id: string; type: string; label: string }[] = [];
+formValues: Record<string, string | null> = {};
+
+onFieldsLoaded(fields: Field[]) {
+  this.fields = fields;
+  this.formValues = Object.fromEntries(fields.map(f => [f.id, null]));
+}
+
+onFieldChange(fieldId: string, value: string | null) {
+  this.formValues[fieldId] = value;
+}
+```
+
+```html
+<ng-container *ngFor="let field of fields">
+  <albert-date-picker
+    *ngIf="field.type === 'date'"
+    [placeholder]="field.label"
+    (valueChange)="onFieldChange(field.id, $event)">
+  </albert-date-picker>
+
+  <albert-datetime-picker
+    *ngIf="field.type === 'datetime'"
+    [placeholder]="field.label"
+    (valueChange)="onFieldChange(field.id, $event)">
+  </albert-datetime-picker>
+</ng-container>
+```
+
+> **Note:** `(valueChange)` does not replace `formControl` / `ngModel`. When you need Angular form validation, dirty/touched state, or `form.value` snapshots, combine it with a dynamic `FormGroup` using `addControl()`.
+
 ---
 
 ## Comparison
@@ -197,6 +272,7 @@ export class ExampleComponent {
 | Module required | `DateTimePickerModule` | `DatePickerModule` / `DateTimePickerModule` |
 | Standalone | No | Yes (Angular 15+) |
 | Extra DOM element | Yes (wrapper component) | No (direct on WC) |
+| `(valueChange)` output | Yes | Yes |
 | Best for | Angular 10, NgModule projects | Angular 9+, standalone projects |
 
 ---

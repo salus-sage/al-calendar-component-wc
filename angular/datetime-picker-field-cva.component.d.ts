@@ -1,4 +1,4 @@
-import { AfterViewInit, ElementRef, OnDestroy } from '@angular/core';
+import { AfterViewInit, ElementRef, EventEmitter, OnDestroy } from '@angular/core';
 import { ControlValueAccessor } from '@angular/forms';
 export declare class DateTimePickerFieldCvaComponent implements ControlValueAccessor, AfterViewInit, OnDestroy {
     private elementRef;
@@ -6,6 +6,7 @@ export declare class DateTimePickerFieldCvaComponent implements ControlValueAcce
     required: boolean;
     placeholder: string;
     isEditable: boolean;
+    valueChange: EventEmitter<string | null>;
     private onChange;
     private onTouched;
     private changeListener;
