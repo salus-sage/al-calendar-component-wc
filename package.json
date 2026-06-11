@@ -1,6 +1,6 @@
 {
   "name": "@albert/date-picker",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Native Web Components for date and datetime selection across Angular, Lit, and React",
   "files": [
     "dist",
