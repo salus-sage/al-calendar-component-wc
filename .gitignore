@@ -9,4 +9,5 @@ dist/
 .idea/
 *.swp
 *.swo
+*.tgz
 *~

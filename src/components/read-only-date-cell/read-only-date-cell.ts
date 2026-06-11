@@ -37,7 +37,11 @@ export class ReadOnlyDateCell extends HTMLElement {
     this.valueElement = document.createElement('span');
   }
 
+  private _rendered = false;
+
   connectedCallback() {
+    if (this._rendered) return;
+    this._rendered = true;
     this.render();
     this.updateState();
   }

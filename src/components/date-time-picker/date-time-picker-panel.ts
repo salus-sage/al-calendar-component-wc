@@ -1,4 +1,4 @@
-import { parseTime, formatTime, timeToIso, ParsedTime } from '../../shared/parse-time';
+import { parseTime, formatTime, timeToIso, dateToLocalTime, ParsedTime } from '../../shared/parse-time';
 import { panelRegistry } from '../../shared/panel-registry';
 import '../../components/time-entry/time-entry-field';
 import { applyTokenDefaults } from '../../shared/token-defaults';
@@ -58,8 +58,8 @@ const style = applyTokenDefaults(`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px;
-  gap: 8px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
 }
 
 .nav-btn {
@@ -71,21 +71,20 @@ const style = applyTokenDefaults(`
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--radius-sm);
+  border-radius: 50%;
   transition: background 0.2s ease;
 }
 
 .nav-btn:hover {
-  background: var(--cobalt-95);
+  background: var(--slate-90);
 }
 
 .month-year-btn,
 .year-btn {
-  flex: 1;
   background: none;
   border: none;
   color: var(--text);
-  font-size: 13px;
+  font-size: 1rem;
   cursor: pointer;
   padding: 4px 8px;
   border-radius: var(--radius-sm);
@@ -100,6 +99,7 @@ const style = applyTokenDefaults(`
 .month-year-btn:hover,
 .year-btn:hover {
   background: var(--cobalt-95);
+  color: var(--cobalt-50);
 }
 
 .decade-range {
@@ -111,7 +111,7 @@ const style = applyTokenDefaults(`
 }
 
 .day-grid {
-  padding: 0 12px;
+  padding: 6px 10px;
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 4px;
@@ -157,7 +157,9 @@ const style = applyTokenDefaults(`
   color: white;
   font-weight: 500;
 }
-
+.day-cell[data-selected]:hover {
+  background: var(--cobalt-50);
+}
 .day-cell[data-today] {
   background: var(--slate-90);
 }
@@ -227,8 +229,7 @@ const style = applyTokenDefaults(`
 .footer {
   display: flex;
   justify-content: space-between;
-  padding: 12px;
-  border-top: 1px solid var(--border);
+  padding: 6px 10px;
 }
 
 .footer-btn {
@@ -327,7 +328,7 @@ export class DateTimePickerPanel extends HTMLElement {
 
     this.timezoneDisplay = document.createElement('div');
     this.timezoneDisplay.className = 'timezone-display';
-    this.timezoneDisplay.textContent = `Timezone: ${this.getTimezone()}`;
+    this.timezoneDisplay.textContent = this.getTimezone();
 
     this.timeSectionElement.appendChild(this.timeEntryInput);
     this.timeSectionElement.appendChild(this.timezoneDisplay);
@@ -768,23 +769,21 @@ export class DateTimePickerPanel extends HTMLElement {
 
   private getTimezone(): string {
     try {
-      return Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const offsetMinutes = -new Date().getTimezoneOffset();
+      const sign = offsetMinutes >= 0 ? '+' : '-';
+      const abs = Math.abs(offsetMinutes);
+      const hh = String(Math.floor(abs / 60));
+      const mm = String(abs % 60).padStart(2, '0');
+      const offset = `GMT${sign}${hh}:${mm}`;
+      return `${tz} · ${offset}`;
     } catch {
       return 'UTC';
     }
   }
 
   private getCurrentTime(): ParsedTime {
-    const now = new Date();
-    let hours = now.getHours();
-    const minutes = now.getMinutes();
-
-    let hours12 = hours % 12;
-    if (hours12 === 0) hours12 = 12;
-
-    const meridiem = hours < 12 ? 'AM' : 'PM';
-
-    return { hours: hours12, minutes, meridiem };
+    return dateToLocalTime(new Date());
   }
 
   private dispatchChangeEvent(value: string | null) {
@@ -826,16 +825,16 @@ export class DateTimePickerPanel extends HTMLElement {
 
   public open(anchorElement: HTMLElement, initialValue?: string) {
     this.anchorElement = anchorElement;
-
     if (initialValue) {
-      const parts = initialValue.split('T');
-      const [year, month, day] = parts[0].split('-').map(Number);
-      this.selectedDate = new Date(year, month - 1, day);
-      this.currentDate = new Date(year, month - 1, 1);
-      if (parts[1]) {
-        const [hours, minutes] = parts[1].split(':').map(Number);
-        this.selectedTime = { hours: hours > 12 ? hours - 12 : hours === 0 ? 12 : hours, minutes, meridiem: hours >= 12 ? 'PM' : 'AM' };
-      }
+      // Parse via Date so the browser's timezone conversion applies, matching
+      // how formatDate() (the field display) reads the same ISO string.
+      const d = new Date(initialValue);
+      const localYear = d.getFullYear();
+      const localMonth = d.getMonth();
+      const localDay = d.getDate();
+      this.selectedDate = new Date(localYear, localMonth, localDay);
+      this.currentDate = new Date(localYear, localMonth, 1);
+      this.selectedTime = dateToLocalTime(d);
     } else {
       this.selectedDate = null;
       this.selectedTime = null;

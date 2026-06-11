@@ -66,7 +66,7 @@ test.describe('DateTimePickerPanel', () => {
       return tzDisplay?.textContent;
     });
 
-    expect(timezoneText).toContain('Timezone:');
+    expect(timezoneText).toMatch(/^.+ · GMT[+-]\d+:\d{2}$/);
   });
 
   test('should accept time input in day view', async ({ page }) => {
@@ -757,6 +757,113 @@ test.describe('DateTimePickerPanel', () => {
     expect(decadeRangeCount.initialCount).toBe(1);
     expect(decadeRangeCount.afterNavCount).toBe(1);
     expect(decadeRangeCount.afterSecondNavCount).toBe(1);
+  });
+});
+
+// ─── Timezone conversion (open() must use local time, not raw string digits) ──
+
+test.describe('DateTimePickerPanel — timezone conversion', () => {
+  // Helper: open panel with a given ISO value, return the time entry field's value attribute
+  async function getTimeEntryValue(page: any, isoValue: string): Promise<string | null> {
+    await page.goto('/harness/index.html');
+    return page.evaluate(async (value: string) => {
+      const field = document.createElement('albert-datetime-picker') as any;
+      field.setAttribute('value', value);
+      field.id = 'tz-test-field';
+      document.body.appendChild(field);
+      field.openPanel?.();
+      await new Promise(r => setTimeout(r, 150));
+      const panel = document.querySelector('albert-date-time-picker-panel');
+      const timeEntry = panel?.shadowRoot?.querySelector('albert-time-entry');
+      return timeEntry?.getAttribute('value') ?? null;
+    }, isoValue);
+  }
+
+  // Helper: open panel with a given ISO value, return the selected day cell text
+  async function getSelectedDayText(page: any, isoValue: string): Promise<string | null> {
+    await page.goto('/harness/index.html');
+    return page.evaluate(async (value: string) => {
+      const field = document.createElement('albert-datetime-picker') as any;
+      field.setAttribute('value', value);
+      field.id = 'tz-date-field';
+      document.body.appendChild(field);
+      field.openPanel?.();
+      await new Promise(r => setTimeout(r, 150));
+      const panel = document.querySelector('albert-date-time-picker-panel');
+      const selected = panel?.shadowRoot?.querySelector('.day-cell[data-selected]');
+      return selected?.textContent?.trim() ?? null;
+    }, isoValue);
+  }
+
+  // G1 — time entry shows local time for an offset string
+  test('G1: time entry shows browser-local time for a timezone-offset ISO string', async ({ page }) => {
+    // Pick a UTC moment; derive the expected local display using the browser's own Date API
+    const utcMs = Date.UTC(2024, 2, 16, 2, 30, 0); // 2024-03-16T02:30:00Z
+    const isoValue = new Date(utcMs).toISOString().replace('Z', '+00:00'); // explicit +00:00 offset
+
+    const timeEntry = await getTimeEntryValue(page, isoValue);
+
+    // Compute expected local time in the test browser (same engine as component)
+    const expected = await page.evaluate((ms: number) => {
+      const d = new Date(ms);
+      let h = d.getHours() % 12 || 12;
+      const m = String(d.getMinutes()).padStart(2, '0');
+      const meridiem = d.getHours() < 12 ? 'AM' : 'PM';
+      return `${h}:${m} ${meridiem}`;
+    }, utcMs);
+
+    expect(timeEntry).toBe(expected);
+  });
+
+  // G2 — calendar highlights local date (catches date-boundary crossing)
+  test('G2: calendar highlights the local date when offset crosses a date boundary', async ({ page }) => {
+    // 2024-03-15T22:30:00-05:00 = 2024-03-16T03:30:00Z → could be March 15 or 16 locally
+    const isoValue = '2024-03-15T22:30:00-05:00';
+
+    const selectedDay = await getSelectedDayText(page, isoValue);
+
+    const expectedDay = await page.evaluate((iso: string) => {
+      return String(new Date(iso).getDate());
+    }, isoValue);
+
+    expect(selectedDay).toBe(expectedDay);
+  });
+
+  // G3 — UTC 'Z' suffix parses to local time correctly
+  test('G3: UTC Z-suffix ISO string is converted to local time in the time entry', async ({ page }) => {
+    const utcMs = Date.UTC(2024, 5, 15, 12, 0, 0); // 2024-06-15T12:00:00Z
+    const isoValue = new Date(utcMs).toISOString(); // ends in 'Z'
+
+    const timeEntry = await getTimeEntryValue(page, isoValue);
+
+    const expected = await page.evaluate((ms: number) => {
+      const d = new Date(ms);
+      let h = d.getHours() % 12 || 12;
+      const m = String(d.getMinutes()).padStart(2, '0');
+      const meridiem = d.getHours() < 12 ? 'AM' : 'PM';
+      return `${h}:${m} ${meridiem}`;
+    }, utcMs);
+
+    expect(timeEntry).toBe(expected);
+  });
+
+  // G4 — offset string where date does NOT cross boundary still shows correct local time
+  test('G4: offset string with no date-boundary crossing shows correct local time', async ({ page }) => {
+    // 2024-06-15T10:00:00+00:00 — noon UTC, stays same calendar day everywhere
+    const utcMs = Date.UTC(2024, 5, 15, 10, 0, 0);
+    const isoValue = '2024-06-15T10:00:00+00:00';
+
+    const timeEntry = await getTimeEntryValue(page, isoValue);
+
+    const expected = await page.evaluate((ms: number) => {
+      const d = new Date(ms);
+      let h = d.getHours() % 12 || 12;
+      const m = String(d.getMinutes()).padStart(2, '0');
+      const meridiem = d.getHours() < 12 ? 'AM' : 'PM';
+      return `${h}:${m} ${meridiem}`;
+    }, utcMs);
+
+    expect(timeEntry).toBe(expected);
   });
 });
 

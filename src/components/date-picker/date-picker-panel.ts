@@ -38,8 +38,8 @@ const style = applyTokenDefaults(`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px;
-  gap: 8px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
 }
 
 .nav-btn {
@@ -51,21 +51,20 @@ const style = applyTokenDefaults(`
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--radius-sm);
+  border-radius: 50%;
   transition: background 0.2s ease;
 }
 
 .nav-btn:hover {
-  background: var(--cobalt-95);
+  background: var(--slate-90);
 }
 
 .month-year-btn,
 .year-btn {
-  flex: 1;
   background: none;
   border: none;
   color: var(--text);
-  font-size: 13px;
+  font-size: 1rem;
   cursor: pointer;
   padding: 4px 8px;
   border-radius: var(--radius-sm);
@@ -80,6 +79,7 @@ const style = applyTokenDefaults(`
 .month-year-btn:hover,
 .year-btn:hover {
   background: var(--cobalt-95);
+  color: var(--cobalt-50);
 }
 
 .decade-range {
@@ -91,7 +91,7 @@ const style = applyTokenDefaults(`
 }
 
 .day-grid {
-  padding: 0 12px;
+  padding: 6px 10px;
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 4px;
@@ -142,7 +142,9 @@ const style = applyTokenDefaults(`
 .day-cell[data-today]:not([data-selected]) {
   background: var(--slate-90);
 }
-
+.day-cell[data-selected]:hover {
+  background: var(--cobalt-50);
+}
 .day-cell[data-adjacent] {
   color: var(--text-dim);
 }
@@ -185,9 +187,10 @@ const style = applyTokenDefaults(`
   color: white;
 }
 
-.month-pill[data-current]:not([data-selected]),
-.year-pill[data-current]:not([data-selected]) {
-  background: var(--secondary);
+.month-pill[data-current],
+.year-pill[data-current] {
+  background: var(--cobalt-50);
+  color: white;
 }
 .py-1 {
   padding-block: calc(var(--spacing-sm) * 1);
@@ -203,7 +206,7 @@ const style = applyTokenDefaults(`
 .footer {
   display: flex;
   justify-content: space-between;
-  padding: 12px;
+  padding: 6px 10px;
   border-top: 1px solid var(--border);
 }
 
@@ -530,6 +533,7 @@ export class DatePickerPanel extends HTMLElement {
     this.monthGridElement.innerHTML = '';
     const year = this.currentDate.getFullYear();
     const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
 
     months.forEach((monthName, index) => {
       const btn = document.createElement('button');

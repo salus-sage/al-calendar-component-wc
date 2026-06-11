@@ -31,7 +31,7 @@ const style = applyTokenDefaults(`
 
 .field:focus-within {
   border-color: var(--cobalt-50);
-  outline: 2px solid var(--cobalt-50);
+  outline: 1px solid var(--cobalt-50);
   outline-offset: -1px;
   box-shadow: 0 0 0 3px var(--cobalt-95);
 }
@@ -60,7 +60,7 @@ const style = applyTokenDefaults(`
 }
 
 .field[data-disabled] .value {
-  color: var(--text-disabled);
+  // color: var(--text-disabled);
 }
 
 .icon {
@@ -101,7 +101,11 @@ export class DateTimePickerField extends HTMLElement {
     this.errorElement = document.createElement('div');
   }
 
+  private _rendered = false;
+
   connectedCallback() {
+    if (this._rendered) return;
+    this._rendered = true;
     this.render();
     this.setupEventListeners();
     this.updateState();

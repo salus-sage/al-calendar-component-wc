@@ -137,6 +137,18 @@ export function timeToIso(date: Date, time: ParsedTime): string {
   return `${year}-${month}-${day}T${hoursStr}:${minutes}:00${offsetSign}${offsetHH}:${offsetMM}`;
 }
 
+/**
+ * Extract the local-timezone time from a Date object as a 12-hour ParsedTime.
+ * Used wherever a stored ISO timestamp must be displayed in the viewer's locale.
+ */
+export function dateToLocalTime(d: Date): ParsedTime {
+  const hours24 = d.getHours();
+  const minutes = d.getMinutes();
+  let hours12 = hours24 % 12;
+  if (hours12 === 0) hours12 = 12;
+  return { hours: hours12, minutes, meridiem: hours24 < 12 ? 'AM' : 'PM' };
+}
+
 export function generateTimeOptions(): ParsedTime[] {
   const options: ParsedTime[] = [];
   for (let i = 0; i < 24 * 4; i++) {

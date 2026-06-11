@@ -1,5 +1,7 @@
-import { parseTime, formatTime, generateTimeOptions, ParsedTime } from '../../shared/parse-time';
+import { parseTime, formatTime, generateTimeOptions, dateToLocalTime, ParsedTime } from '../../shared/parse-time';
 import { applyTokenDefaults } from '../../shared/token-defaults';
+
+const clockIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" fill="currentColor"><path d="M528 320C528 434.9 434.9 528 320 528C205.1 528 112 434.9 112 320C112 205.1 205.1 112 320 112C434.9 112 528 205.1 528 320zM64 320C64 461.4 178.6 576 320 576C461.4 576 576 461.4 576 320C576 178.6 461.4 64 320 64C178.6 64 64 178.6 64 320zM296 184L296 320C296 328 300 335.5 306.7 340L402.7 404C413.7 411.4 428.6 408.4 436 397.3C443.4 386.2 440.4 371.4 429.3 364L344 307.2L344 184C344 170.7 333.3 160 320 160C306.7 160 296 170.7 296 184z"/></svg>`;
 
 const style = applyTokenDefaults(`
 :host {
@@ -18,9 +20,27 @@ const style = applyTokenDefaults(`
   align-items: center;
 }
 
+.input-icon {
+  position: absolute;
+  left: 10px;
+  width: 16px;
+  height: 16px;
+  color: var(--text-medium);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+.input-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
 input {
   width: 100%;
-  padding: 10px 12px;
+  padding: 7px 10px 7px 34px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--background);
@@ -28,19 +48,17 @@ input {
   font-size: 14px;
   color: var(--text);
   transition: all 0.2s ease;
+  outline: none;
 }
 
-input:hover:not([data-disabled]) {
-  border-color: var(--text-medium);
-}
+// input:hover:not([data-disabled]) {
+//   border-color: var(--border);
+// }
 
 input:focus {
   border-color: var(--cobalt-50);
-  outline: 2px solid var(--cobalt-50);
-  outline-offset: -1px;
-  box-shadow: 0 0 0 3px var(--cobalt-95);
-}
 
+}
 input[data-disabled] {
   cursor: not-allowed;
   opacity: 0.6;
@@ -64,12 +82,12 @@ input[data-disabled] {
 
 .dropdown[data-placement="below"] {
   border-top: none;
-  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+  border-radius: var(--radius-sm);
 }
 
 .dropdown[data-placement="above"] {
   border-bottom: none;
-  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  border-radius: var(--radius-sm);
 }
 
 .suggestion {
@@ -80,7 +98,7 @@ input[data-disabled] {
 }
 
 .suggestion:hover {
-  background: var(--cobalt-95);
+  background: var(--slate-90);
 }
 
 .suggestion[data-selected] {
@@ -89,8 +107,8 @@ input[data-disabled] {
 }
 
 .suggestion[data-active] {
-  background: var(--cobalt-50);
-  color: white;
+  background: var(--cobalt-95);
+  color: var(--cobalt-50);
 }
 
 .error {
@@ -123,7 +141,11 @@ export class TimeEntryField extends HTMLElement {
     this.suggestionsContainer = document.createElement('div');
   }
 
+  private _rendered = false;
+
   connectedCallback() {
+    if (this._rendered) return;
+    this._rendered = true;
     this.render();
     this.setupEventListeners();
   }
@@ -143,6 +165,11 @@ export class TimeEntryField extends HTMLElement {
     this.input.setAttribute('aria-label', 'Time entry field');
     this.updateInputValue();
 
+    const iconEl = document.createElement('span');
+    iconEl.classList.add('input-icon');
+    iconEl.setAttribute('aria-hidden', 'true');
+    iconEl.innerHTML = clockIcon;
+
     this.dropdown.classList.add('dropdown');
     this.suggestionsContainer.classList.add('suggestions-container');
     this.dropdown.appendChild(this.suggestionsContainer);
@@ -150,6 +177,7 @@ export class TimeEntryField extends HTMLElement {
     const errorEl = document.createElement('div');
     errorEl.classList.add('error');
 
+    inputWrapper.appendChild(iconEl);
     inputWrapper.appendChild(this.input);
     inputWrapper.appendChild(this.dropdown);
 
@@ -276,19 +304,20 @@ export class TimeEntryField extends HTMLElement {
     const viewportHeight = window.innerHeight;
     const spaceBelow = viewportHeight - inputRect.bottom;
     const spaceAbove = inputRect.top;
+    const offset = 3;
 
     const width = inputRect.width;
 
     if (spaceBelow >= dropdownMaxHeight || spaceBelow >= spaceAbove) {
       // Position below the input
       this.dropdown.setAttribute('data-placement', 'below');
-      this.dropdown.style.top = (inputRect.bottom - 1) + 'px';
+      this.dropdown.style.top = (inputRect.bottom + offset) + 'px';
       this.dropdown.style.bottom = 'auto';
       this.dropdown.style.maxHeight = Math.min(dropdownMaxHeight, spaceBelow) + 'px';
     } else {
       // Position above the input — more room above
       this.dropdown.setAttribute('data-placement', 'above');
-      this.dropdown.style.bottom = (viewportHeight - inputRect.top - 1) + 'px';
+      this.dropdown.style.bottom = (viewportHeight - inputRect.top + offset) + 'px';
       this.dropdown.style.top = 'auto';
       this.dropdown.style.maxHeight = Math.min(dropdownMaxHeight, spaceAbove) + 'px';
     }
@@ -376,16 +405,7 @@ export class TimeEntryField extends HTMLElement {
   }
 
   private getCurrentTime(): ParsedTime {
-    const now = new Date();
-    let hours = now.getHours();
-    const minutes = now.getMinutes();
-
-    let hours12 = hours % 12;
-    if (hours12 === 0) hours12 = 12;
-
-    const meridiem = hours < 12 ? 'AM' : 'PM';
-
-    return { hours: hours12, minutes, meridiem };
+    return dateToLocalTime(new Date());
   }
 
   private updateInputValue() {

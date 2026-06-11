@@ -60,7 +60,7 @@ const style = applyTokenDefaults(`
 }
 
 .field[data-disabled] .value {
-  color: var(--text-disabled);
+  // color: var(--text-disabled);
 }
 
 .icon {
@@ -101,7 +101,11 @@ export class DatePickerField extends HTMLElement {
     this.errorElement = document.createElement('div');
   }
 
+  private _rendered = false;
+
   connectedCallback() {
+    if (this._rendered) return;
+    this._rendered = true;
     this.render();
     this.setupEventListeners();
     this.updateState();
