@@ -4,8 +4,12 @@
   "description": "Native Web Components for date and datetime selection across Angular, Lit, and React",
   "files": [
     "dist",
-    "angular"
+    "angular",
+    "README.md"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "main": "dist/albert-date-picker.js",
   "module": "dist/albert-date-picker.js",
   "exports": {
@@ -20,6 +24,7 @@
   },
   "scripts": {
     "build": "node build.mjs",
+    "prepublishOnly": "npm run build",
     "serve": "esbuild --servedir=. --serve=3000",
     "test": "npm run build && playwright test",
     "test:watch": "playwright test --ui"
