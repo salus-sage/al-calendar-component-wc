@@ -1,4 +1,4 @@
-# @albert/date-picker
+# al-date-picker
 
 Native Web Components for date and datetime selection. Works in Angular, Lit, React, and any other framework — or with no framework at all.
 
@@ -8,7 +8,7 @@ Native Web Components for date and datetime selection. Works in Angular, Lit, Re
 ## Installation
 
 ```bash
-npm install @albert/date-picker
+npm install al-date-picker
 ```
 
 ---
@@ -18,7 +18,7 @@ npm install @albert/date-picker
 ### Vanilla / Lit / any framework
 
 ```js
-import '@albert/date-picker'; // registers both custom elements
+import 'al-date-picker'; // registers both custom elements
 ```
 
 ```html
@@ -72,11 +72,11 @@ Events are dispatched with `bubbles: true` and `composed: true` so they cross th
 
 ## Angular integration
 
-The package ships a pre-built Angular wrapper at `@albert/date-picker/angular`. It provides Angular modules and directives with full `ControlValueAccessor` support (reactive forms and `ngModel`).
+The package ships a pre-built Angular wrapper at `al-date-picker/angular`. It provides Angular modules and directives with full `ControlValueAccessor` support (reactive forms and `ngModel`).
 
 > **Required:** Always import the web component registration separately so the custom elements are defined in the browser:
 > ```typescript
-> import '@albert/date-picker';
+> import 'al-date-picker';
 > ```
 
 ### Angular 10 — NgModule (Approach A: Component wrapper)
@@ -87,8 +87,8 @@ Easiest for Angular 10 projects. Wraps the web component in an Angular component
 // app.module.ts
 import { NgModule } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
-import { DateTimePickerModule } from '@albert/date-picker/angular';
-import '@albert/date-picker';
+import { DateTimePickerModule } from 'al-date-picker/angular';
+import 'al-date-picker';
 
 @NgModule({
   imports: [ReactiveFormsModule, DateTimePickerModule],
@@ -128,8 +128,8 @@ No extra wrapper element in the DOM. Apply the directive directly on the web com
 // app.module.ts
 import { NgModule } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
-import { DatePickerModule, DateTimePickerModule } from '@albert/date-picker/angular';
-import '@albert/date-picker';
+import { DatePickerModule, DateTimePickerModule } from 'al-date-picker/angular';
+import 'al-date-picker';
 
 @NgModule({
   imports: [ReactiveFormsModule, DatePickerModule, DateTimePickerModule],
@@ -154,8 +154,8 @@ export class AppModule {}
 ```typescript
 import { Component } from '@angular/core';
 import { ReactiveFormsModule, FormControl } from '@angular/forms';
-import { DatePickerFieldCvaDirective } from '@albert/date-picker/angular';
-import '@albert/date-picker';
+import { DatePickerFieldCvaDirective } from 'al-date-picker/angular';
+import 'al-date-picker';
 
 @Component({
   standalone: true,
@@ -223,7 +223,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { PLATFORM_ID, inject } from '@angular/core';
 
 if (isPlatformBrowser(inject(PLATFORM_ID))) {
-  import('@albert/date-picker');
+  import('al-date-picker');
 }
 ```
 
@@ -238,7 +238,7 @@ if (isPlatformBrowser(inject(PLATFORM_ID))) {
 }
 ```
 
-Both are optional — only required when using the `@albert/date-picker/angular` entry point.
+Both are optional — only required when using the `al-date-picker/angular` entry point.
 
 ---
 
@@ -263,8 +263,8 @@ A scrollable 15-minute suggestion dropdown assists entry. Free-text values (e.g.
 
 | Entry point | Contents |
 |---|---|
-| `@albert/date-picker` | Bundled ESM web component — registers `<albert-date-picker>` and `<albert-datetime-picker>` |
-| `@albert/date-picker/angular` | Angular modules and CVA directives for Angular 10+ |
+| `al-date-picker` | Bundled ESM web component — registers `<albert-date-picker>` and `<albert-datetime-picker>` |
+| `al-date-picker/angular` | Angular modules and CVA directives for Angular 10+ |
 
 ---
 
