@@ -1,5 +1,5 @@
 {
-  "name": "@albert/date-picker/angular",
+  "name": "al-date-picker/angular",
   "version": "0.1.0",
   "es2015": "./index.js",
   "typings": "./index.d.ts",

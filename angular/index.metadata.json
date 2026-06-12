@@ -19,5 +19,5 @@
       "from": "./datetime-picker-field-cva.component"
     }
   ],
-  "importAs": "@albert/date-picker/angular"
+  "importAs": "al-date-picker/angular"
 }
