@@ -131,6 +131,7 @@ export class TimeEntryField extends HTMLElement {
   private lastValidValue: string = '';
   private options: ParsedTime[] = generateTimeOptions();
   private activeIndex: number = -1;
+  private activeSetByNav: boolean = false;
   private isOpen: boolean = false;
 
   constructor() {
@@ -214,7 +215,10 @@ export class TimeEntryField extends HTMLElement {
   }
 
   private setupEventListeners() {
-    this.input.addEventListener('focus', () => this.openDropdown());
+    this.input.addEventListener('focus', () => {
+      this.input.select();
+      this.openDropdown();
+    });
     this.input.addEventListener('input', () => this.handleInput());
     this.input.addEventListener('keydown', (e) => this.handleKeydown(e));
     this.input.addEventListener('blur', () => this.handleBlur());
@@ -223,6 +227,7 @@ export class TimeEntryField extends HTMLElement {
 
   private handleInput() {
     const parsed = parseTime(this.input.value);
+    this.activeSetByNav = false;
     this.activeIndex = parsed ? this.findNearestOptionIndex(parsed) : -1;
     this.renderSuggestions();
   }
@@ -247,10 +252,11 @@ export class TimeEntryField extends HTMLElement {
         break;
       case 'Enter':
         e.preventDefault();
-        if (this.activeIndex >= 0) {
+        if (this.activeIndex >= 0 && this.activeSetByNav) {
           this.selectOption(this.activeIndex);
         } else {
           this.commit();
+          this.closeDropdown();
         }
         break;
       case 'Escape':
@@ -269,6 +275,7 @@ export class TimeEntryField extends HTMLElement {
   private moveActiveIndex(delta: number) {
     const newIndex = this.activeIndex + delta;
     if (newIndex >= 0 && newIndex < this.options.length) {
+      this.activeSetByNav = true;
       this.activeIndex = newIndex;
       this.renderSuggestions();
       this.scrollToActive();
@@ -348,6 +355,7 @@ export class TimeEntryField extends HTMLElement {
     this.dropdown.removeAttribute('data-open');
     this.dropdown.removeAttribute('data-placement');
     this.activeIndex = -1;
+    this.activeSetByNav = false;
   }
 
   private commit() {
