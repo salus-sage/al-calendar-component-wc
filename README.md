@@ -4,6 +4,7 @@ Native Web Components for date and datetime selection. Works in Angular, Lit, Re
 
 - **`<albert-date-picker>`** — date-only field with calendar panel
 - **`<albert-datetime-picker>`** — date + time field with free-text time entry and 15-minute suggestions
+- **`<albert-read-only-date-cell>`** — lightweight read-only display cell for date or datetime values
 
 ## Installation
 
@@ -67,6 +68,118 @@ Events are dispatched with `bubbles: true` and `composed: true` so they cross th
 |---|---|---|
 | `albert-date-picker` | `May 23, 2025` | `YYYY-MM-DD` |
 | `albert-datetime-picker` | `May 23, 2025 3:30 PM` | ISO 8601 with UTC offset |
+
+---
+
+## Read-only date cell
+
+`<albert-read-only-date-cell>` renders a formatted, non-interactive date or datetime value. It is useful inside data grids or detail views where a picker is not needed.
+
+```html
+<albert-read-only-date-cell value="2025-05-23"></albert-read-only-date-cell>
+<albert-read-only-date-cell value="2025-05-23T14:30:00+05:30"></albert-read-only-date-cell>
+<albert-read-only-date-cell empty-state="N/A"></albert-read-only-date-cell>
+```
+
+| Attribute | Type | Description |
+|---|---|---|
+| `value` | `string` | `YYYY-MM-DD` or ISO 8601 datetime. Omit or leave empty to show the empty state. |
+| `empty-state` | `string` | Text shown when `value` is absent. Defaults to `—`. |
+
+The component exposes two CSS shadow parts for custom styling:
+
+```css
+albert-read-only-date-cell::part(cell)  { font-size: 12px; }
+albert-read-only-date-cell::part(value) { color: var(--my-text-color); }
+```
+
+---
+
+## CSS shadow parts
+
+All picker components expose named shadow parts for targeted styling without `::ng-deep` or global overrides.
+
+### `<albert-date-picker>` and `<albert-datetime-picker>` fields
+
+Both field elements expose the same four parts:
+
+| Part | Element | State attributes |
+|---|---|---|
+| `field` | Outer clickable wrapper | `[data-disabled]` when `is-editable="false"`, `[data-error]` when `required` and empty |
+| `value` | Text / placeholder span | `[data-empty]` when no value is set |
+| `icon` | Calendar (date) or clock (datetime) icon | — |
+| `error` | Required-field error message below the field | Shown when `required` is set and value is empty |
+
+```css
+albert-date-picker::part(field) {
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+/* State-based targeting */
+albert-date-picker::part(field)[data-error] { border-color: red; }
+albert-date-picker::part(field)[data-disabled] { background: #f5f5f5; }
+albert-date-picker::part(value)[data-empty] { font-style: italic; }
+
+albert-date-picker::part(icon) { color: cornflowerblue; }
+albert-date-picker::part(error) { font-size: 11px; }
+```
+
+Apply the same selectors on `albert-datetime-picker`.
+
+---
+
+### `<albert-date-picker-panel>`
+
+| Part | Element | Notes |
+|---|---|---|
+| `panel` | Outer panel container | |
+| `header` | Header row (navigation bar) | |
+| `prev` | Previous-navigation button | |
+| `next` | Next-navigation button | |
+| `month-year-btn` | "Month Year ▾" toggle button | Visible in day view |
+| `year-btn` | Year toggle button | Visible in month view |
+| `decade-range` | Decade label (e.g. "2020 – 2029") | Visible in year view |
+| `day-grid` | Calendar day grid | |
+| `month-grid` | Month picker grid | |
+| `year-grid` | Year picker grid | |
+| `footer` | Footer row | |
+| `today-btn` | "Today" shortcut button | |
+| `clear-btn` | "Clear" button | |
+| `month-pill` | Each month button in the month grid | Carries `[data-selected]`, `[data-current]` |
+| `year-pill` | Each year button in the year grid | Carries `[data-selected]`, `[data-current]` |
+
+```css
+albert-date-picker-panel::part(panel) {
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+albert-date-picker-panel::part(today-btn) { font-weight: 600; }
+albert-date-picker-panel::part(month-pill)[data-selected] { border-radius: 6px; }
+```
+
+---
+
+### `<albert-date-time-picker-panel>`
+
+| Part | Element | Notes |
+|---|---|---|
+| `panel` | Outer panel container | |
+| `header` | Header row (navigation bar) | |
+| `prev` | Previous-navigation button | |
+| `next` | Next-navigation button | |
+| `month-year` | "Month Year ▾" toggle button | Note: named `month-year`, not `month-year-btn` |
+
+```css
+albert-date-time-picker-panel::part(panel) {
+  border-radius: 12px;
+}
+
+albert-date-time-picker-panel::part(header) {
+  background: #f8f9fa;
+}
+```
 
 ---
 
@@ -259,11 +372,112 @@ A scrollable 15-minute suggestion dropdown assists entry. Free-text values (e.g.
 
 ---
 
+## Utility functions
+
+The main `al-date-picker` entry point exports standalone utility functions alongside the custom elements. They are useful for formatting picker output values, building custom time UIs, or working with time data without rendering a component.
+
+```typescript
+import {
+  formatDate,
+  parseTime,
+  formatTime,
+  timeToIso,
+  generateTimeOptions,
+} from 'al-date-picker';
+import type { ParsedTime } from 'al-date-picker';
+```
+
+### `ParsedTime`
+
+The common type used by all time utilities.
+
+```typescript
+interface ParsedTime {
+  hours: number;       // 1–12
+  minutes: number;     // 0–59
+  meridiem: 'AM' | 'PM';
+}
+```
+
+---
+
+### `formatDate(value)`
+
+Formats a `YYYY-MM-DD` date string or ISO 8601 datetime string into a locale-aware display string. Returns `''` for falsy input — safe to call with `null` and `undefined`.
+
+```typescript
+formatDate('2025-05-23')                    // "May 23, 2025"
+formatDate('2025-05-23T14:30:00+05:30')    // "May 23, 2025 2:30 PM"
+formatDate(null)                             // ""
+formatDate(undefined)                        // ""
+```
+
+---
+
+### `parseTime(input)`
+
+Parses a free-text time string into a `ParsedTime` object. Returns `null` if the input is unrecognisable. This is the same parser used internally by `<albert-datetime-picker>`.
+
+```typescript
+parseTime('3')       // { hours: 3,  minutes: 0,  meridiem: 'PM' }  (PM heuristic)
+parseTime('9')       // { hours: 9,  minutes: 0,  meridiem: 'AM' }  (AM heuristic)
+parseTime('3pm')     // { hours: 3,  minutes: 0,  meridiem: 'PM' }
+parseTime('1530')    // { hours: 3,  minutes: 30, meridiem: 'PM' }
+parseTime('9:30')    // { hours: 9,  minutes: 30, meridiem: 'AM' }
+parseTime('1145pm')  // { hours: 11, minutes: 45, meridiem: 'PM' }
+parseTime('abc')     // null
+```
+
+AM/PM heuristic when no meridiem is supplied: hours 1–6 → PM, hours 7–11 → AM (mirrors the table in [Time entry](#time-entry-datetimepicker) above).
+
+---
+
+### `formatTime(time)`
+
+Converts a `ParsedTime` object back into a display string. Returns `''` for `null` input.
+
+```typescript
+formatTime({ hours: 3,  minutes: 30, meridiem: 'PM' })  // "3:30 PM"
+formatTime({ hours: 12, minutes: 0,  meridiem: 'AM' })  // "12:00 AM"
+formatTime(null)                                          // ""
+```
+
+---
+
+### `timeToIso(date, time)`
+
+Combines a `Date` object and a `ParsedTime` into a full ISO 8601 string with the viewer's local UTC offset. The offset is computed from the specific date and time so DST transitions are handled correctly.
+
+```typescript
+const date = new Date(2025, 4, 23); // May 23 2025 (month is 0-indexed)
+const time = parseTime('3:30pm');   // { hours: 3, minutes: 30, meridiem: 'PM' }
+
+timeToIso(date, time);
+// "2025-05-23T15:30:00+05:30"  (UTC offset varies by the viewer's locale)
+```
+
+---
+
+### `generateTimeOptions()`
+
+Returns an array of 96 `ParsedTime` objects covering a full 24-hour day in 15-minute intervals (12:00 AM through 11:45 PM). Useful for populating a custom time-selection dropdown.
+
+```typescript
+const options = generateTimeOptions(); // 96 entries
+
+options[0];   // { hours: 12, minutes: 0,  meridiem: 'AM' }  — midnight
+options[4];   // { hours: 1,  minutes: 0,  meridiem: 'AM' }  — 1:00 AM
+options[48];  // { hours: 12, minutes: 0,  meridiem: 'PM' }  — noon
+options[95];  // { hours: 11, minutes: 45, meridiem: 'PM' }  — last slot
+```
+
+---
+
 ## Package contents
 
 | Entry point | Contents |
 |---|---|
-| `al-date-picker` | Bundled ESM web component — registers `<albert-date-picker>` and `<albert-datetime-picker>` |
+| `al-date-picker` | Bundled ESM — registers `<albert-date-picker>`, `<albert-datetime-picker>`, and `<albert-read-only-date-cell>`; exports utility functions (`formatDate`, `parseTime`, `formatTime`, `timeToIso`, `generateTimeOptions`) and the `ParsedTime` type |
 | `al-date-picker/angular` | Angular modules and CVA directives for Angular 10+ |
 
 ---
@@ -276,4 +490,4 @@ Any browser that supports [Custom Elements v1](https://caniuse.com/custom-elemen
 
 ## License
 
-MIT
+Apache-2.0
