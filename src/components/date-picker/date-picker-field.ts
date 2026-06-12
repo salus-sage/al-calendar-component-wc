@@ -26,14 +26,12 @@ const style = applyTokenDefaults(`
 }
 
 .field:hover:not([data-disabled]) {
-  border-color: var(--text-medium);
+  border-color: var(--cobalt-50);
 }
 
-.field:focus-within {
+.field:focus-within,
+.field[aria-expanded="true"] {
   border-color: var(--cobalt-50);
-  outline: 2px solid var(--cobalt-50);
-  outline-offset: -1px;
-  box-shadow: 0 0 0 3px var(--cobalt-95);
 }
 
 .field[data-disabled] {
