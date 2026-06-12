@@ -80,7 +80,7 @@ writeFileSync(
   'angular/package.json',
   JSON.stringify(
     {
-      name: '@albert/date-picker/angular',
+      name: 'al-date-picker/angular',
       version: '0.1.0',
       es2015: './index.js',
       typings: './index.d.ts',
@@ -111,7 +111,7 @@ writeFileSync(
         { 'from': './datetime-picker-field-cva.directive' },
         { 'from': './datetime-picker-field-cva.component' },
       ],
-      'importAs': '@albert/date-picker/angular',
+      'importAs': 'al-date-picker/angular',
     },
     null,
     2,
