@@ -24,7 +24,7 @@ const DEFAULTS: Record<string, string> = {
   'cell-size':    '36px',
   'panel-width':  '280px',
   'error':        '#d32f2f',
-  'font-size-sm': '0.75rem',
+  'font-size-sm': '13px',
   'spacing-sm':   '0.25rem',
 };
 

@@ -21,6 +21,7 @@ const style = applyTokenDefaults(`
   --panel-width: 268px;
   --cell-size: 30px;
   --radius-sm: 6px;
+  --font-size-sm: 13px;
 }
 
 .panel {
@@ -84,7 +85,7 @@ const style = applyTokenDefaults(`
   background: none;
   border: none;
   color: var(--text);
-  font-size: 1rem;
+  font-size: var(--font-size-sm);
   cursor: pointer;
   padding: 4px 8px;
   border-radius: var(--radius-sm);
@@ -105,7 +106,7 @@ const style = applyTokenDefaults(`
 .decade-range {
   flex: 1;
   text-align: center;
-  font-size: 13px;
+  font-size: var(--font-size-sm);
   color: var(--text);
   font-weight: 500;
 }
@@ -236,7 +237,7 @@ const style = applyTokenDefaults(`
   background: none;
   border: none;
   color: var(--cobalt-50);
-  font-size: 13px;
+  font-size: var(--font-size-sm);
   cursor: pointer;
   padding: 0;
   font-weight: 500;
