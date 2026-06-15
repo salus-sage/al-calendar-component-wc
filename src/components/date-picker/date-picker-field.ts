@@ -9,6 +9,7 @@ const calendarIcon = `<svg width="20" height="20" viewBox="0 0 256 256" fill="cu
 const style = applyTokenDefaults(`
 :host {
   display: block;
+  --font-size-sm: 13px;
 }
 
 .field {

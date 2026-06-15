@@ -880,7 +880,7 @@ export class DateTimePickerPanel extends HTMLElement {
 
       document.addEventListener('click', this.documentClickListener);
       document.addEventListener('keydown', this.documentKeyListener);
-      window.addEventListener('scroll', this.scrollResizeListener, { capture: true, passive: true });
+      window.addEventListener('scroll', () => this.close(), { capture: true, passive: true });
       window.addEventListener('resize', this.scrollResizeListener, { passive: true });
 
       // S4 — move focus into the day grid after first rAF renders content

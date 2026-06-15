@@ -826,7 +826,7 @@ export class DatePickerPanel extends HTMLElement {
 
     document.addEventListener('pointerdown', this.documentClickListener);
     document.addEventListener('keydown', this.documentKeyListener);
-    window.addEventListener('scroll', this.scrollResizeListener, { capture: true, passive: true });
+    window.addEventListener('scroll', () => this.close(), { capture: true, passive: true });
     window.addEventListener('resize', this.scrollResizeListener, { passive: true });
   }
 
