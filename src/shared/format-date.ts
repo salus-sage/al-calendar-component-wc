@@ -38,6 +38,7 @@ function formatTimestamp(isoStr: string): string {
       hour: 'numeric',
       minute: '2-digit',
       hour12: true,
+      timeZoneName: 'shortOffset',
     }).format(date);
 
     return `${datePart} ${timePart}`;
