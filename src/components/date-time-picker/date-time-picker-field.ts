@@ -194,6 +194,11 @@ export class DateTimePickerField extends HTMLElement {
     // S6 — reset aria-expanded when panel closes without selection
     this.panel!.addEventListener('_albert-close', () => {
       this.fieldElement.setAttribute('aria-expanded', 'false');
+      // Re-dispatch on the host element so external listeners (e.g. Angular templates)
+      // can detect panel dismissal and treat it as end of data entry.
+      this.dispatchEvent(
+        new CustomEvent('albert-panel-close', { bubbles: true, composed: true })
+      );
     });
   }
 

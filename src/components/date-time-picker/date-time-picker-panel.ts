@@ -860,7 +860,6 @@ export class DateTimePickerPanel extends HTMLElement {
         const composedPath = (e as any).composedPath?.() || [];
         const isClickInsidePanel = composedPath.includes(this) || composedPath.includes(this.panelElement);
         const isClickOnAnchor = composedPath.includes(anchorElement) || e.target === anchorElement;
-
         if (!isClickInsidePanel && !isClickOnAnchor) {
           this.close();
           if (this.selectedDate && this.selectedTime) {

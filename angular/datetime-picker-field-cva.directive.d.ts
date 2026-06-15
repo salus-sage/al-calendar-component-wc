@@ -6,10 +6,12 @@ export declare class DateTimePickerFieldCvaDirective implements ControlValueAcce
     set placeholder(value: string);
     set isEditable(value: boolean);
     valueChange: EventEmitter<string | null>;
+    panelClose: EventEmitter<void>;
     private onChange;
     private onTouched;
     private changeListener;
     private blurListener;
+    private panelCloseListener;
     constructor(elementRef: ElementRef<HTMLElement>);
     ngOnInit(): void;
     ngOnDestroy(): void;

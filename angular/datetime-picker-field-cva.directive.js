@@ -22,10 +22,12 @@ let DateTimePickerFieldCvaDirective = class DateTimePickerFieldCvaDirective {
     constructor(elementRef) {
         this.elementRef = elementRef;
         this.valueChange = new EventEmitter();
+        this.panelClose = new EventEmitter();
         this.onChange = () => { };
         this.onTouched = () => { };
         this.changeListener = null;
         this.blurListener = null;
+        this.panelCloseListener = null;
     }
     ngOnInit() {
         this.setupEventListeners();
@@ -37,6 +39,9 @@ let DateTimePickerFieldCvaDirective = class DateTimePickerFieldCvaDirective {
         }
         if (this.blurListener) {
             el.removeEventListener('blur', this.blurListener);
+        }
+        if (this.panelCloseListener) {
+            el.removeEventListener('albert-panel-close', this.panelCloseListener);
         }
     }
     setupEventListeners() {
@@ -52,6 +57,8 @@ let DateTimePickerFieldCvaDirective = class DateTimePickerFieldCvaDirective {
         el.addEventListener('albert-change', this.changeListener);
         this.blurListener = () => this.onTouched();
         el.addEventListener('blur', this.blurListener);
+        this.panelCloseListener = () => this.panelClose.emit();
+        el.addEventListener('albert-panel-close', this.panelCloseListener);
     }
     writeValue(value) {
         if (value) {
@@ -106,6 +113,10 @@ __decorate([
     Output(),
     __metadata("design:type", Object)
 ], DateTimePickerFieldCvaDirective.prototype, "valueChange", void 0);
+__decorate([
+    Output(),
+    __metadata("design:type", Object)
+], DateTimePickerFieldCvaDirective.prototype, "panelClose", void 0);
 DateTimePickerFieldCvaDirective = __decorate([
     Directive({
         // formControlName added so this directive activates inside [formGroup] bindings

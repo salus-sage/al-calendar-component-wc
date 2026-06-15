@@ -40,11 +40,13 @@ export class DateTimePickerFieldCvaDirective
   }
 
   @Output() valueChange = new EventEmitter<string | null>();
+  @Output() panelClose = new EventEmitter<void>();
 
   private onChange: (value: string | null) => void = () => {};
   private onTouched: () => void = () => {};
   private changeListener: ((e: Event) => void) | null = null;
   private blurListener: (() => void) | null = null;
+  private panelCloseListener: (() => void) | null = null;
 
   constructor(private elementRef: ElementRef<HTMLElement>) {}
 
@@ -59,6 +61,9 @@ export class DateTimePickerFieldCvaDirective
     }
     if (this.blurListener) {
       el.removeEventListener('blur', this.blurListener);
+    }
+    if (this.panelCloseListener) {
+      el.removeEventListener('albert-panel-close', this.panelCloseListener);
     }
   }
 
@@ -76,6 +81,9 @@ export class DateTimePickerFieldCvaDirective
 
     this.blurListener = () => this.onTouched();
     el.addEventListener('blur', this.blurListener);
+
+    this.panelCloseListener = () => this.panelClose.emit();
+    el.addEventListener('albert-panel-close', this.panelCloseListener);
   }
 
   writeValue(value: string | null) {
