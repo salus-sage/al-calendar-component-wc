@@ -196,6 +196,14 @@ export class DateTimePickerField extends HTMLElement {
     });
   }
 
+  // Add after the private openPanel() method
+  public open(): void {
+    if (this.isEditable()) {
+      this.openPanel();
+    }
+  }
+
+
   private openPanel() {
     if (!this.panel) {
       this.panel = new DateTimePickerPanel();
