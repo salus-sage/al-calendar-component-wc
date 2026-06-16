@@ -383,6 +383,8 @@ import {
   formatTime,
   timeToIso,
   generateTimeOptions,
+  dateToLocalTime,
+  dateToIsoString,
 } from 'al-date-picker';
 import type { ParsedTime } from 'al-date-picker';
 ```
@@ -458,6 +460,74 @@ timeToIso(date, time);
 
 ---
 
+### `dateToIsoString(date)`
+
+Converts a `Date` object into a `YYYY-MM-DD` string using local date parts. This is the same format produced by the **Today** button inside `<albert-date-picker>` — use it to set a "today" value programmatically without opening the calendar panel.
+
+```typescript
+dateToIsoString(new Date());  // "2026-06-16"  (local date, no time component)
+```
+
+---
+
+### `dateToLocalTime(date)`
+
+Extracts the local-timezone time from a `Date` object as a 12-hour `ParsedTime`. This is used internally by `<albert-datetime-picker>` when the **Now** button is clicked. Combine it with `timeToIso` to produce a "now" value programmatically without opening the panel.
+
+```typescript
+dateToLocalTime(new Date());
+// e.g. { hours: 2, minutes: 30, meridiem: 'PM' }
+```
+
+---
+
+### Getting today / now without the panel
+
+Consumers can obtain the exact same values that the picker **Today** and **Now** buttons emit, and assign them directly to a bound field — no panel interaction required.
+
+```typescript
+import { dateToIsoString, timeToIso, dateToLocalTime } from 'al-date-picker';
+
+// Today — identical format to the date-picker Today button ("YYYY-MM-DD")
+const today = dateToIsoString(new Date());
+
+// Now — identical format to the datetime-picker Now button (ISO 8601 + local offset)
+const now = new Date();
+const nowIso = timeToIso(now, dateToLocalTime(now));
+```
+
+Angular example — setting today/now on button click without opening the calendar:
+
+```typescript
+import { dateToIsoString, timeToIso, dateToLocalTime } from 'al-date-picker';
+
+export class MyComponent {
+  dateValue: string | null = null;
+  datetimeValue: string | null = null;
+
+  setToday() {
+    this.dateValue = dateToIsoString(new Date());
+  }
+
+  setNow() {
+    const now = new Date();
+    this.datetimeValue = timeToIso(now, dateToLocalTime(now));
+  }
+}
+```
+
+```html
+<albert-date-picker [(ngModel)]="dateValue"></albert-date-picker>
+<button (click)="setToday()">Today</button>
+
+<albert-datetime-picker [(ngModel)]="datetimeValue"></albert-datetime-picker>
+<button (click)="setNow()">Now</button>
+```
+
+> **Note:** When setting a value programmatically this way, any `(valueChange)` or validation callbacks that rely on the `albert-change` DOM event will not fire automatically. Call your validation logic directly after assigning the value.
+
+---
+
 ### `generateTimeOptions()`
 
 Returns an array of 96 `ParsedTime` objects covering a full 24-hour day in 15-minute intervals (12:00 AM through 11:45 PM). Useful for populating a custom time-selection dropdown.
@@ -477,7 +547,7 @@ options[95];  // { hours: 11, minutes: 45, meridiem: 'PM' }  — last slot
 
 | Entry point | Contents |
 |---|---|
-| `al-date-picker` | Bundled ESM — registers `<albert-date-picker>`, `<albert-datetime-picker>`, and `<albert-read-only-date-cell>`; exports utility functions (`formatDate`, `parseTime`, `formatTime`, `timeToIso`, `generateTimeOptions`) and the `ParsedTime` type |
+| `al-date-picker` | Bundled ESM — registers `<albert-date-picker>`, `<albert-datetime-picker>`, and `<albert-read-only-date-cell>`; exports utility functions (`formatDate`, `parseTime`, `formatTime`, `timeToIso`, `generateTimeOptions`, `dateToLocalTime`, `dateToIsoString`) and the `ParsedTime` type |
 | `al-date-picker/angular` | Angular modules and CVA directives for Angular 10+ |
 
 ---

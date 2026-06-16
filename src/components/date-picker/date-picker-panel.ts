@@ -1,5 +1,6 @@
 import { panelRegistry } from '../../shared/panel-registry';
 import { applyTokenDefaults } from '../../shared/token-defaults';
+import { dateToIsoString } from '../../shared/parse-time';
 
 const caretLeftIcon = `<svg width="16" height="16" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
   <path d="M165.66,202.34a8,8,0,0,1-11.32,11.32l-80-80a8,8,0,0,1,0-11.32l80-80a8,8,0,0,1,11.32,11.32L91.31,128Z"/>
@@ -523,7 +524,7 @@ export class DatePickerPanel extends HTMLElement {
 
     btn.addEventListener('click', () => {
       this.selectDate(date);
-      this.dispatchChange(this.dateToISOString(date));
+      this.dispatchChange(dateToIsoString(date));
       this.close();
     });
 
@@ -697,7 +698,7 @@ export class DatePickerPanel extends HTMLElement {
   private handleTodayClick() {
     const today = new Date();
     this.selectDate(today);
-    this.dispatchChange(this.dateToISOString(today));
+    this.dispatchChange(dateToIsoString(today));
     this.close();
   }
 
@@ -711,12 +712,6 @@ export class DatePickerPanel extends HTMLElement {
     this.selectedDate = new Date(date);
   }
 
-  private dateToISOString(date: Date): string {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  }
 
   private dispatchChange(value: string | null) {
     const event = new CustomEvent('albert-change', {
