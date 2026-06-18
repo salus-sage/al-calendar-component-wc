@@ -808,9 +808,32 @@ export class DateTimePickerPanel extends HTMLElement {
         const localYear = d.getFullYear();
         const localMonth = d.getMonth();
         const localDay = d.getDate();
-        this.selectedDate = new Date(localYear, localMonth, localDay);
-        this.currentDate = new Date(localYear, localMonth, 1);
-        this.selectedTime = dateToLocalTime(d);
+        const parsedDate = new Date(localYear, localMonth, localDay);
+
+        // Guard: only accept the parsed value when it falls within the active
+        // bounds.  An out-of-range value (e.g. a partial string like "202" that
+        // JavaScript parses as year 202 AD, or a stale past date that violates
+        // a minDate constraint) must not be selected or used to seed currentDate
+        // — doing so traps the user navigating centuries away from valid dates.
+        const isWithinBounds =
+          (this.minDate === null || parsedDate >= this.minDate) &&
+          (this.maxDate === null || parsedDate <= this.maxDate);
+
+        if (isWithinBounds) {
+          this.selectedDate = parsedDate;
+          this.currentDate = new Date(localYear, localMonth, 1);
+          this.selectedTime = dateToLocalTime(d);
+        } else {
+          // Value violates constraints — don't select it; open at the nearest
+          // valid month so the user can immediately pick a valid date.
+          this.selectedDate = null;
+          this.selectedTime = null;
+          this.currentDate = this.minDate
+            ? new Date(this.minDate.getFullYear(), this.minDate.getMonth(), 1)
+            : this.maxDate
+              ? new Date(this.maxDate.getFullYear(), this.maxDate.getMonth(), 1)
+              : new Date();
+        }
       } else {
         this.selectedDate = null;
         this.selectedTime = null;

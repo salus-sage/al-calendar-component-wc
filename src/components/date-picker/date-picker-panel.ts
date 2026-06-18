@@ -724,8 +724,29 @@ export class DatePickerPanel extends HTMLElement {
     if (initialValue) {
       const [year, month, day] = initialValue.split('-').map(Number);
       if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
-        this.selectedDate = new Date(year, month - 1, day);
-        this.currentDate = new Date(year, month - 1, 1);
+        const parsedDate = new Date(year, month - 1, day);
+
+        // Guard: only accept the parsed value when it falls within the active
+        // bounds.  A partial/corrupted string (e.g. "202") that happens to parse
+        // as a valid but ancient year, or a stale date that violates a minDate
+        // constraint, must not seed selectedDate / currentDate — that traps the
+        // user navigating through centuries of out-of-range months.
+        const isWithinBounds =
+          (this.minDate === null || parsedDate >= this.minDate) &&
+          (this.maxDate === null || parsedDate <= this.maxDate);
+
+        if (isWithinBounds) {
+          this.selectedDate = parsedDate;
+          this.currentDate = new Date(year, month - 1, 1);
+        } else {
+          // Value violates constraints — open at the nearest valid month instead.
+          this.selectedDate = null;
+          this.currentDate = this.minDate
+            ? new Date(this.minDate.getFullYear(), this.minDate.getMonth(), 1)
+            : this.maxDate
+              ? new Date(this.maxDate.getFullYear(), this.maxDate.getMonth(), 1)
+              : new Date();
+        }
       } else {
         this.selectedDate = null;
         this.currentDate = new Date();
