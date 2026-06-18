@@ -646,16 +646,24 @@ export class DatePickerPanel extends HTMLElement {
 
   private updateValidationBanner() {
     if (!this.validationBannerElement) return;
+    // Always clear previous children first.
+    this.validationBannerElement.textContent = '';
     if (this.validationMessage) {
-      this.validationBannerElement.innerHTML = `
-        <svg class="validation-banner-icon" width="14" height="14" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <path d="M236.8,188.09,149.35,36.22a24.76,24.76,0,0,0-42.7,0L19.2,188.09a23.51,23.51,0,0,0,0,23.72A24.35,24.35,0,0,0,40.55,224h174.9a24.35,24.35,0,0,0,21.33-12.19A23.51,23.51,0,0,0,236.8,188.09ZM120,104a8,8,0,0,1,16,0v40a8,8,0,0,1-16,0Zm8,88a12,12,0,1,1,12-12A12,12,0,0,1,128,192Z"/>
-        </svg>
-        <span>${this.validationMessage}</span>`;
+      // Icon is a static compile-time constant — safe to set via innerHTML.
+      const iconEl = document.createElement('span');
+      iconEl.className = 'validation-banner-icon';
+      iconEl.setAttribute('aria-hidden', 'true');
+      iconEl.innerHTML = `<svg _ngcontent-aoh-c164="" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" class="tickicon cursor ng-star-inserted"><path _ngcontent-aoh-c164="" d="M10 5.625C8.24219 5.625 6.64844 6.5625 5.75781 8.0625C4.89062 9.58594 4.89062 11.4375 5.75781 12.9375C6.64844 14.4609 8.24219 15.375 10 15.375C11.7344 15.375 13.3281 14.4609 14.2188 12.9375C15.0859 11.4375 15.0859 9.58594 14.2188 8.0625C13.3281 6.5625 11.7344 5.625 10 5.625ZM10 16.5C7.84375 16.5 5.875 15.375 4.79688 13.5C3.71875 11.6484 3.71875 9.375 4.79688 7.5C5.875 5.64844 7.84375 4.5 10 4.5C12.1328 4.5 14.1016 5.64844 15.1797 7.5C16.2578 9.375 16.2578 11.6484 15.1797 13.5C14.1016 15.375 12.1328 16.5 10 16.5ZM12.6484 9.39844L9.64844 12.3984C9.41406 12.6328 9.0625 12.6328 8.85156 12.3984L7.35156 10.8984C7.11719 10.6875 7.11719 10.3359 7.35156 10.125C7.5625 9.89062 7.91406 9.89062 8.14844 10.125L9.25 11.2266L11.8516 8.625C12.0625 8.39062 12.4141 8.39062 12.6484 8.625C12.8594 8.83594 12.8594 9.1875 12.6484 9.39844Z" fill="#004EAB"></path></svg>`;
+
+      // Consumer-supplied text — MUST use textContent, never innerHTML.
+      const textEl = document.createElement('span');
+      textEl.textContent = this.validationMessage;
+
+      this.validationBannerElement.appendChild(iconEl);
+      this.validationBannerElement.appendChild(textEl);
       this.validationBannerElement.removeAttribute('data-hidden');
     } else {
       this.validationBannerElement.setAttribute('data-hidden', '');
-      this.validationBannerElement.textContent = '';
     }
   }
 

@@ -235,9 +235,8 @@ export const VALIDATION_BANNER_CSS = `
   padding: 8px 12px;
   font-size: 12px;
   line-height: 1.4;
-  color: var(--error);
-  background: var(--error-surface, #fff5f5);
-  border-bottom: 1px solid var(--error-border, #fecaca);
+  color: inherit;
+  border-bottom: 1px solid var(--border, #d3d9e5);
 }
 
 .validation-banner[data-hidden] {
