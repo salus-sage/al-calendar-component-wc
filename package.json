@@ -1,6 +1,6 @@
 {
   "name": "al-date-picker",
-  "version": "0.1.13",
+  "version": "0.1.14",
   "description": "Native Web Components for date and datetime selection across Angular, Lit, and React",
   "files": [
     "dist",
