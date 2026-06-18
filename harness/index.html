@@ -57,8 +57,45 @@
       id="date-picker-with-value"
       class="form-control"
       value="2026-06-15"
+      min-date="2026-06-10"
     ></albert-date-picker>
   </div>
+
+  <section style="margin-top: 2rem;">
+    <h3>Date Picker with bounds (min: 2026-06-10, max: 2026-06-20)</h3>
+    <albert-date-picker
+      id="bounded-date"
+      value="2026-06-15"
+      min-date="2026-06-10"
+      max-date="2026-06-20"
+    ></albert-date-picker>
+  </section>
+
+  <section style="margin-top: 2rem;">
+    <h3>DateTime Picker with bounds (min: 2026-06-10, max: 2026-06-20)</h3>
+    <albert-datetime-picker
+      id="bounded-datetime"
+      value="2026-06-15T12:00:00"
+      min-date="2026-06-10"
+      max-date="null"
+    ></albert-datetime-picker>
+  </section>
+
+  <section style="margin-top: 2rem;">
+    <h3>Date Picker with validation message banner</h3>
+    <albert-date-picker
+      id="date-with-banner"
+      validation-message="Date must be within the project timeline."
+    ></albert-date-picker>
+  </section>
+
+  <section style="margin-top: 2rem;">
+    <h3>DateTime Picker with validation message banner</h3>
+    <albert-datetime-picker
+      id="datetime-with-banner"
+      validation-message="Start time cannot be in the past."
+    ></albert-datetime-picker>
+  </section>
 
   
 </body>

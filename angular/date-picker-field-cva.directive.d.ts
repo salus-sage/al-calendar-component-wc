@@ -5,6 +5,9 @@ export declare class DatePickerFieldCvaDirective implements ControlValueAccessor
     set required(value: boolean);
     set placeholder(value: string);
     set isEditable(value: boolean);
+    set minDate(value: string | null);
+    set maxDate(value: string | null);
+    set validationMessage(value: string | null);
     valueChange: EventEmitter<string | null>;
     private onChange;
     private onTouched;

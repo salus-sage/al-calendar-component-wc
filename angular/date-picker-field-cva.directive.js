@@ -19,6 +19,30 @@ let DatePickerFieldCvaDirective = class DatePickerFieldCvaDirective {
     set isEditable(value) {
         this.setEditable(value);
     }
+    set minDate(value) {
+        if (value) {
+            this.elementRef.nativeElement.setAttribute('min-date', value);
+        }
+        else {
+            this.elementRef.nativeElement.removeAttribute('min-date');
+        }
+    }
+    set maxDate(value) {
+        if (value) {
+            this.elementRef.nativeElement.setAttribute('max-date', value);
+        }
+        else {
+            this.elementRef.nativeElement.removeAttribute('max-date');
+        }
+    }
+    set validationMessage(value) {
+        if (value) {
+            this.elementRef.nativeElement.setAttribute('validation-message', value);
+        }
+        else {
+            this.elementRef.nativeElement.removeAttribute('validation-message');
+        }
+    }
     constructor(elementRef) {
         this.elementRef = elementRef;
         this.valueChange = new EventEmitter();
@@ -102,6 +126,21 @@ __decorate([
     __metadata("design:type", Boolean),
     __metadata("design:paramtypes", [Boolean])
 ], DatePickerFieldCvaDirective.prototype, "isEditable", null);
+__decorate([
+    Input(),
+    __metadata("design:type", Object),
+    __metadata("design:paramtypes", [Object])
+], DatePickerFieldCvaDirective.prototype, "minDate", null);
+__decorate([
+    Input(),
+    __metadata("design:type", Object),
+    __metadata("design:paramtypes", [Object])
+], DatePickerFieldCvaDirective.prototype, "maxDate", null);
+__decorate([
+    Input(),
+    __metadata("design:type", Object),
+    __metadata("design:paramtypes", [Object])
+], DatePickerFieldCvaDirective.prototype, "validationMessage", null);
 __decorate([
     Output(),
     __metadata("design:type", Object)

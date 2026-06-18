@@ -1,5 +1,17 @@
 import { panelRegistry } from '../../shared/panel-registry';
 import { applyTokenDefaults } from '../../shared/token-defaults';
+import {
+  PANEL_CONTAINER_CSS,
+  PANEL_HEADER_CSS,
+  NAV_BTN_CSS,
+  HEADER_TOGGLE_BTNS_CSS,
+  DAY_GRID_LAYOUT_CSS,
+  DAY_CELL_BASE_CSS,
+  MONTH_YEAR_GRIDS_CSS,
+  UTILITY_SPACING_CSS,
+  HIDDEN_CSS,
+  VALIDATION_BANNER_CSS,
+} from '../../shared/panel-styles';
 import { dateToIsoString } from '../../shared/parse-time';
 
 const caretLeftIcon = `<svg width="16" height="16" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -23,188 +35,37 @@ const style = applyTokenDefaults(`
   --font-size-sm: 13px;
 }
 
-.panel {
-  position: fixed;
-  width: var(--panel-width);
-  display: flex;
-  flex-direction: column;
-  background: var(--background);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-3);
-  z-index: 1000;
-  font-family: var(--font-sans);
-}
-
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 10px;
-  border-bottom: 1px solid var(--border);
-}
-
-.nav-btn {
-  background: none;
-  border: none;
-  color: var(--text-medium);
-  cursor: pointer;
-  padding: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  transition: background 0.2s ease;
-}
-
-.nav-btn:hover {
-  background: var(--slate-90);
-}
-
-.month-year-btn,
-.year-btn {
-  background: none;
-  border: none;
-  color: var(--text);
-  font-size: var(--font-size-sm);
-  cursor: pointer;
-  padding: 4px 8px;
-  border-radius: var(--radius-sm);
-  transition: background 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  font-weight: 500;
-}
-
-.month-year-btn:hover,
-.year-btn:hover {
-  background: var(--cobalt-95);
-  color: var(--cobalt-50);
-}
-
-.decade-range {
-  flex: 1;
-  text-align: center;
-  font-size: var(--font-size-sm);
-  color: var(--text);
-  font-weight: 500;
-}
-
-.day-grid {
-  padding: 6px 10px;
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 4px;
-}
-
-.weekdays {
-  display: contents;
-}
-
-.weekday {
-  text-align: center;
-  font-size: 12px;
-  color: var(--text);
-  padding: 4px 0;
-  font-weight: 500;
-}
+${PANEL_CONTAINER_CSS}
+${PANEL_HEADER_CSS}
+${NAV_BTN_CSS}
+${HEADER_TOGGLE_BTNS_CSS}
+${DAY_GRID_LAYOUT_CSS}
 
 .days {
   display: contents;
 }
 
+${DAY_CELL_BASE_CSS}
+
 .day-cell {
-  width: var(--cell-size);
-  height: var(--cell-size);
-  border-radius: 50%;
-  background: none;
-  border: none;
-  color: var(--text);
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   margin: 0 auto;
 }
 
-.day-cell:hover:not([data-adjacent]) {
+.day-cell:hover:not([data-adjacent]):not(:disabled) {
   background: var(--cobalt-95);
-}
-
-.day-cell[data-selected] {
-  background: var(--cobalt-50);
-  color: white;
-  font-weight: 600;
 }
 
 .day-cell[data-today]:not([data-selected]) {
   background: var(--slate-90);
 }
-.day-cell[data-selected]:hover {
-  background: var(--cobalt-50);
-}
+
 .day-cell[data-adjacent] {
   color: var(--text-dim);
 }
 
-.month-grid,
-.year-grid {
-  padding: 12px;
-  display: grid;
-  gap: 8px;
-}
+${MONTH_YEAR_GRIDS_CSS}
+${UTILITY_SPACING_CSS}
 
-.month-grid {
-  grid-template-columns: repeat(3, 1fr);
-}
-
-.year-grid {
-  grid-template-columns: repeat(2, 1fr);
-}
-
-.month-pill,
-.year-pill {
-  background: none;
-  border: none;
-  color: var(--text);
-  font-size: var(--font-size-sm);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-weight: 500;
-}
-
-.month-pill:hover,
-.year-pill:hover {
-  background: var(--cobalt-95);
-}
-
-.month-pill[data-selected],
-.year-pill[data-selected] {
-  background: var(--cobalt-50);
-  color: white;
-}
-
-.month-pill[data-current],
-.year-pill[data-current] {
-  background: var(--cobalt-50);
-  color: white;
-}
-.py-1 {
-  padding-block: calc(var(--spacing-sm) * 1);
-}
-
-.px-3 {
-  padding-inline: calc(var(--spacing-sm) * 3);
-}
-
-.px-4 {
-  padding-inline: calc(var(--spacing-sm) * 4);
-}
 .footer {
   display: flex;
   justify-content: space-between;
@@ -234,9 +95,8 @@ const style = applyTokenDefaults(`
   opacity: 0.6;
 }
 
-[hidden] {
-  display: none !important;
-}
+${HIDDEN_CSS}
+${VALIDATION_BANNER_CSS}
 `);
 
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -256,9 +116,13 @@ export class DatePickerPanel extends HTMLElement {
   private todayBtn: HTMLButtonElement | undefined;
   private clearBtn: HTMLButtonElement | undefined;
   private headerElement: HTMLElement | undefined;
+  private validationBannerElement: HTMLElement | undefined;
 
   private currentDate = new Date();
   private selectedDate: Date | null = null;
+  private minDate: Date | null = null;
+  private maxDate: Date | null = null;
+  private validationMessage: string | null = null;
   private anchorElement: HTMLElement | null = null;
   private view: 'day' | 'month' | 'year' = 'day';
   private documentClickListener: ((e: Event) => void) | null = null;
@@ -367,7 +231,16 @@ export class DatePickerPanel extends HTMLElement {
     footerElement.appendChild(this.todayBtn);
     footerElement.appendChild(this.clearBtn);
 
+    // Validation banner (hidden by default)
+    this.validationBannerElement = document.createElement('div');
+    this.validationBannerElement.setAttribute('part', 'validation-banner');
+    this.validationBannerElement.className = 'validation-banner';
+    this.validationBannerElement.setAttribute('data-hidden', '');
+    this.validationBannerElement.setAttribute('role', 'alert');
+    this.validationBannerElement.setAttribute('aria-live', 'polite');
+
     this.panelElement.appendChild(this.headerElement);
+    this.panelElement.appendChild(this.validationBannerElement);
     this.panelElement.appendChild(this.dayGridElement);
     this.panelElement.appendChild(this.monthGridElement);
     this.panelElement.appendChild(this.yearGridElement);
@@ -384,6 +257,8 @@ export class DatePickerPanel extends HTMLElement {
     this.shadow.appendChild(this.panelElement);
 
     this.renderDayView();
+    // Flush any validationMessage that arrived via open() before the DOM existed.
+    this.updateValidationBanner();
   }
 
   private setupInternalListeners() {
@@ -499,6 +374,7 @@ export class DatePickerPanel extends HTMLElement {
     this.dayGridElement.appendChild(daysContainer);
     this.updateHeaderForDay();
     this.initializeFocusedCell();
+    this.updateNavButtons();
   }
 
   private createDayCell(date: Date, isAdjacent: boolean) {
@@ -528,6 +404,14 @@ export class DatePickerPanel extends HTMLElement {
       this.close();
     });
 
+    const cellMidnight = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const isBeforeMin = this.minDate !== null && cellMidnight < this.minDate;
+    const isAfterMax = this.maxDate !== null && cellMidnight > this.maxDate;
+    if (isBeforeMin || isAfterMax) {
+      btn.disabled = true;
+      btn.setAttribute('data-out-of-range', '');
+    }
+
     return btn;
   }
 
@@ -556,6 +440,14 @@ export class DatePickerPanel extends HTMLElement {
         btn.setAttribute('data-current', '');
       }
 
+      const firstOfMonth = new Date(year, index, 1);
+      const lastOfMonth = new Date(year, index + 1, 0);
+      const isBeforeMin = this.minDate !== null && lastOfMonth < this.minDate;
+      const isAfterMax = this.maxDate !== null && firstOfMonth > this.maxDate;
+      if (isBeforeMin || isAfterMax) {
+        btn.disabled = true;
+      }
+
       btn.addEventListener('click', () => {
         this.currentDate = new Date(year, index, 1);
         this.view = 'day';
@@ -567,6 +459,7 @@ export class DatePickerPanel extends HTMLElement {
     });
 
     this.updateHeaderForMonth();
+    this.updateNavButtons();
   }
 
   private renderYearView() {
@@ -597,6 +490,12 @@ export class DatePickerPanel extends HTMLElement {
         btn.setAttribute('data-current', '');
       }
 
+      const isBeforeMin = this.minDate !== null && year < this.minDate.getFullYear();
+      const isAfterMax = this.maxDate !== null && year > this.maxDate.getFullYear();
+      if (isBeforeMin || isAfterMax) {
+        btn.disabled = true;
+      }
+
       btn.addEventListener('click', () => {
         this.currentDate = new Date(year, this.currentDate.getMonth(), 1);
         this.view = 'month';
@@ -606,6 +505,8 @@ export class DatePickerPanel extends HTMLElement {
 
       this.yearGridElement.appendChild(btn);
     }
+
+    this.updateNavButtons();
   }
 
   private updateHeaderForDay() {
@@ -617,6 +518,35 @@ export class DatePickerPanel extends HTMLElement {
   private updateHeaderForMonth() {
     const year = this.currentDate.getFullYear();
     this.yearBtn.innerHTML = `${year} ${caretDownIcon}`;
+  }
+
+  private updateNavButtons(): void {
+    const prevBtn = this.prevBtn
+      ?? this.shadowRoot?.querySelector('[part="prev"]') as HTMLButtonElement | null;
+    const nextBtn = this.nextBtn
+      ?? this.shadowRoot?.querySelector('[part="next"]') as HTMLButtonElement | null;
+
+    if (!prevBtn || !nextBtn) return;
+
+    const y = this.currentDate.getFullYear();
+    const m = this.currentDate.getMonth();
+
+    if (this.view === 'day') {
+      prevBtn.disabled = this.minDate !== null
+        && y === this.minDate.getFullYear()
+        && m <= this.minDate.getMonth();
+      nextBtn.disabled = this.maxDate !== null
+        && y === this.maxDate.getFullYear()
+        && m >= this.maxDate.getMonth();
+    } else if (this.view === 'month') {
+      prevBtn.disabled = this.minDate !== null && y <= this.minDate.getFullYear();
+      nextBtn.disabled = this.maxDate !== null && y >= this.maxDate.getFullYear();
+    } else if (this.view === 'year') {
+      const decade = Math.floor(y / 10) * 10;
+      prevBtn.disabled = this.minDate !== null && decade <= Math.floor(this.minDate.getFullYear() / 10) * 10;
+      nextBtn.disabled = this.maxDate !== null && (decade + 9) >= this.maxDate.getFullYear()
+        && decade >= Math.floor(this.maxDate.getFullYear() / 10) * 10;
+    }
   }
 
   private updateVisibleViews() {
@@ -710,8 +640,24 @@ export class DatePickerPanel extends HTMLElement {
 
   private selectDate(date: Date) {
     this.selectedDate = new Date(date);
+    this.validationMessage = null;
+    this.updateValidationBanner();
   }
 
+  private updateValidationBanner() {
+    if (!this.validationBannerElement) return;
+    if (this.validationMessage) {
+      this.validationBannerElement.innerHTML = `
+        <svg class="validation-banner-icon" width="14" height="14" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M236.8,188.09,149.35,36.22a24.76,24.76,0,0,0-42.7,0L19.2,188.09a23.51,23.51,0,0,0,0,23.72A24.35,24.35,0,0,0,40.55,224h174.9a24.35,24.35,0,0,0,21.33-12.19A23.51,23.51,0,0,0,236.8,188.09ZM120,104a8,8,0,0,1,16,0v40a8,8,0,0,1-16,0Zm8,88a12,12,0,1,1,12-12A12,12,0,0,1,128,192Z"/>
+        </svg>
+        <span>${this.validationMessage}</span>`;
+      this.validationBannerElement.removeAttribute('data-hidden');
+    } else {
+      this.validationBannerElement.setAttribute('data-hidden', '');
+      this.validationBannerElement.textContent = '';
+    }
+  }
 
   private dispatchChange(value: string | null) {
     const event = new CustomEvent('albert-change', {
@@ -747,7 +693,24 @@ export class DatePickerPanel extends HTMLElement {
     this.panelElement.style.left = `${Math.max(0, left)}px`;
   }
 
-  open(anchorElement: HTMLElement, initialValue?: string) {
+  open(
+    anchorElement: HTMLElement,
+    initialValue?: string,
+    options?: { minDate?: Date | null; maxDate?: Date | null; validationMessage?: string | null },
+  ) {
+    const rawMin = options?.minDate ?? null;
+    const rawMax = options?.maxDate ?? null;
+    this.minDate = rawMin && !isNaN(rawMin.getTime()) ? rawMin : null;
+    this.maxDate = rawMax && !isNaN(rawMax.getTime()) ? rawMax : null;
+    if (this.minDate) {
+      this.minDate = new Date(this.minDate.getFullYear(), this.minDate.getMonth(), this.minDate.getDate());
+    }
+    if (this.maxDate) {
+      this.maxDate = new Date(this.maxDate.getFullYear(), this.maxDate.getMonth(), this.maxDate.getDate());
+    }
+    this.validationMessage = options?.validationMessage ?? null;
+    this.updateValidationBanner();
+
     this.anchorElement = anchorElement;
 
     if (initialValue) {

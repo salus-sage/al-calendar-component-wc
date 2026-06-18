@@ -38,6 +38,30 @@ export class DatePickerFieldCvaDirective
     this.setEditable(value);
   }
 
+  @Input() set minDate(value: string | null) {
+    if (value) {
+      this.elementRef.nativeElement.setAttribute('min-date', value);
+    } else {
+      this.elementRef.nativeElement.removeAttribute('min-date');
+    }
+  }
+
+  @Input() set maxDate(value: string | null) {
+    if (value) {
+      this.elementRef.nativeElement.setAttribute('max-date', value);
+    } else {
+      this.elementRef.nativeElement.removeAttribute('max-date');
+    }
+  }
+
+  @Input() set validationMessage(value: string | null) {
+    if (value) {
+      this.elementRef.nativeElement.setAttribute('validation-message', value);
+    } else {
+      this.elementRef.nativeElement.removeAttribute('validation-message');
+    }
+  }
+
   @Output() valueChange = new EventEmitter<string | null>();
 
   private onChange: (value: string | null) => void = () => {};

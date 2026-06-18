@@ -91,6 +91,9 @@ export class DateTimePickerField extends HTMLElement {
   private errorElement: HTMLElement;
   private panel: DateTimePickerPanel | null = null;
   private panelChangeListener: ((e: Event) => void) | null = null;
+  private _minDate: Date | null = null;
+  private _maxDate: Date | null = null;
+  private _validationMessage: string | null = null;
 
   constructor() {
     super();
@@ -218,7 +221,11 @@ export class DateTimePickerField extends HTMLElement {
     const currentValue = this.getAttribute('value');
     // S6 — reflect open state immediately
     this.fieldElement.setAttribute('aria-expanded', 'true');
-    this.panel.open(this, currentValue || undefined);
+    this.panel.open(this, currentValue || undefined, {
+      minDate: this._minDate,
+      maxDate: this._maxDate,
+      validationMessage: this._validationMessage,
+    });
   }
 
   private updateState() {
@@ -262,10 +269,26 @@ export class DateTimePickerField extends HTMLElement {
   }
 
   static get observedAttributes() {
-    return ['value', 'required', 'placeholder', 'is-editable'];
+    return ['value', 'required', 'placeholder', 'is-editable', 'min-date', 'max-date', 'validation-message'];
   }
 
-  attributeChangedCallback() {
+  attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
+    switch (name) {
+      case 'min-date': {
+        const d = new Date(newValue ?? '');
+        this._minDate = newValue && !isNaN(d.getTime()) ? d : null;
+        break;
+      }
+      case 'max-date': {
+        const d = new Date(newValue ?? '');
+        this._maxDate = newValue && !isNaN(d.getTime()) ? d : null;
+        break;
+      }
+      case 'validation-message': {
+        this._validationMessage = newValue ?? null;
+        break;
+      }
+    }
     this.updateState();
   }
 }

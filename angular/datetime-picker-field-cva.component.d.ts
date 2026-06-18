@@ -6,6 +6,9 @@ export declare class DateTimePickerFieldCvaComponent implements ControlValueAcce
     required: boolean;
     placeholder: string;
     isEditable: boolean;
+    minDate: string | null;
+    maxDate: string | null;
+    validationMessage: string | null;
     valueChange: EventEmitter<string | null>;
     private onChange;
     private onTouched;

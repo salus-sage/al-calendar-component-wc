@@ -33,6 +33,9 @@ export class DateTimePickerFieldCvaComponent
   @Input() required = false;
   @Input() placeholder = 'Select a date and time';
   @Input() isEditable = true;
+  @Input() minDate: string | null = null;
+  @Input() maxDate: string | null = null;
+  @Input() validationMessage: string | null = null;
 
   @Output() valueChange = new EventEmitter<string | null>();
 
@@ -129,5 +132,20 @@ export class DateTimePickerFieldCvaComponent
       el.setAttribute('placeholder', this.placeholder);
     }
     el.setAttribute('is-editable', this.isEditable.toString());
+    if (this.minDate) {
+      el.setAttribute('min-date', this.minDate);
+    } else {
+      el.removeAttribute('min-date');
+    }
+    if (this.maxDate) {
+      el.setAttribute('max-date', this.maxDate);
+    } else {
+      el.removeAttribute('max-date');
+    }
+    if (this.validationMessage) {
+      el.setAttribute('validation-message', this.validationMessage);
+    } else {
+      el.removeAttribute('validation-message');
+    }
   }
 }

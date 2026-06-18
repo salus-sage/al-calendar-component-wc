@@ -49,6 +49,70 @@ document.querySelector('albert-datetime-picker').addEventListener('albert-change
 | `placeholder` | `string` | Overrides default placeholder text |
 | `required` | boolean (presence) | Marks the field as required |
 | `is-editable` | `"false"` | When set to `"false"`, renders the field as read-only |
+| `min-date` | `string` | Optional. Earliest selectable date in `YYYY-MM-DD` format. Days, months, and years before this date are disabled in the panel. Navigation cannot go before the month containing this date. |
+| `max-date` | `string` | Optional. Latest selectable date in `YYYY-MM-DD` format. Days, months, and years after this date are disabled in the panel. Navigation cannot go past the month containing this date. |
+| `validation-message` | `string` | Optional. When set, a warning banner appears inside the panel below the header. The banner is automatically dismissed when the user selects a date. |
+
+### Date bounds behaviour
+
+When `min-date` and/or `max-date` are set:
+
+- Day cells outside the range are **visually dimmed** and carry `[data-out-of-range]` — they cannot be clicked.
+- Month pills where the entire month falls outside the range are disabled.
+- Year pills where the entire year falls outside the range are disabled.
+- The prev / next navigation arrows are disabled when the calendar reaches the boundary month or decade.
+- Invalid attribute values (e.g. `"not-a-date"`) are silently ignored — no constraints are applied.
+- If `min-date` is greater than `max-date` every day will appear disabled; the consumer is responsible for providing a valid window.
+
+```html
+<!-- Only June 2026 is selectable -->
+<albert-date-picker
+  value="2026-06-15"
+  min-date="2026-06-01"
+  max-date="2026-06-30"
+></albert-date-picker>
+
+<!-- Allow any date from today onwards -->
+<albert-datetime-picker
+  min-date="2026-06-18"
+></albert-datetime-picker>
+```
+
+---
+
+### Validation message banner
+
+Set `validation-message` to display a warning banner inside the panel when it opens. The banner sits below the header and above the calendar grid. It is automatically hidden when the user picks a date.
+
+```html
+<!-- Static message -->
+<albert-date-picker
+  validation-message="Date must be within the project timeline."
+></albert-date-picker>
+
+<!-- Combined with bounds -->
+<albert-datetime-picker
+  min-date="2026-06-18"
+  validation-message="Start time cannot be in the past."
+></albert-datetime-picker>
+```
+
+Update the attribute dynamically at any time — the panel reads it fresh on every open:
+
+```js
+const picker = document.querySelector('albert-date-picker');
+picker.setAttribute('validation-message', 'Please select a weekday.');
+
+// Clear the banner
+picker.removeAttribute('validation-message');
+```
+
+| Scenario | Behaviour |
+|---|---|
+| Attribute set on field | Banner appears every time the panel opens |
+| User selects a date | Banner is immediately dismissed |
+| User clicks Clear | Panel closes; banner reappears on the next open |
+| Attribute removed while panel is closed | No banner on next open |
 
 ---
 
@@ -148,6 +212,7 @@ Apply the same selectors on `albert-datetime-picker`.
 | `clear-btn` | "Clear" button | |
 | `month-pill` | Each month button in the month grid | Carries `[data-selected]`, `[data-current]` |
 | `year-pill` | Each year button in the year grid | Carries `[data-selected]`, `[data-current]` |
+| `validation-banner` | Warning banner below the header | Present only when `validation-message` is set; hidden via `[data-hidden]` |
 
 ```css
 albert-date-picker-panel::part(panel) {
@@ -170,6 +235,7 @@ albert-date-picker-panel::part(month-pill)[data-selected] { border-radius: 6px; 
 | `prev` | Previous-navigation button | |
 | `next` | Next-navigation button | |
 | `month-year` | "Month Year ▾" toggle button | Note: named `month-year`, not `month-year-btn` |
+| `validation-banner` | Warning banner below the header | Present only when `validation-message` is set; hidden via `[data-hidden]` |
 
 ```css
 albert-date-time-picker-panel::part(panel) {
@@ -230,7 +296,7 @@ export class ExampleComponent {
 }
 ```
 
-**`albert-datetime-picker-cva` inputs:** `required`, `placeholder`, `isEditable`  
+**`albert-datetime-picker-cva` inputs:** `required`, `placeholder`, `isEditable`, `minDate`, `maxDate`, `validationMessage`  
 **`albert-datetime-picker-cva` outputs:** `(valueChange)` — emits `string | null` on every change
 
 ### Angular 10 — NgModule (Approach B: Directive on native element)
@@ -260,6 +326,13 @@ export class AppModule {}
 
 <!-- Output-only (no form binding) -->
 <albert-date-picker (valueChange)="onDateChanged($event)"></albert-date-picker>
+
+<!-- With date bounds -->
+<albert-date-picker
+  formControlName="dueDate"
+  [minDate]="projectStart"
+  [maxDate]="projectEnd"
+></albert-date-picker>
 ```
 
 ### Angular 15+ — Standalone components
@@ -322,6 +395,8 @@ onFieldChange(fieldId: string, value: string | null) {
 | Standalone (Angular 15+) | No | Yes |
 | Extra DOM element | Yes | No |
 | `(valueChange)` output | Yes | Yes |
+| `minDate` / `maxDate` inputs | Yes | Yes |
+| `validationMessage` input | Yes | Yes |
 | Best for | Angular 10, NgModule projects | Angular 9+, standalone projects |
 
 ---

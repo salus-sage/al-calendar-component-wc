@@ -2,6 +2,18 @@ import { parseTime, formatTime, timeToIso, dateToLocalTime, ParsedTime } from '.
 import { panelRegistry } from '../../shared/panel-registry';
 import '../../components/time-entry/time-entry-field';
 import { applyTokenDefaults } from '../../shared/token-defaults';
+import {
+  PANEL_CONTAINER_CSS,
+  PANEL_HEADER_CSS,
+  NAV_BTN_CSS,
+  HEADER_TOGGLE_BTNS_CSS,
+  DAY_GRID_LAYOUT_CSS,
+  DAY_CELL_BASE_CSS,
+  MONTH_YEAR_GRIDS_CSS,
+  UTILITY_SPACING_CSS,
+  HIDDEN_CSS,
+  VALIDATION_BANNER_CSS,
+} from '../../shared/panel-styles';
 
 const caretLeftIcon = `<svg width="16" height="16" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
   <path d="M165.66,202.34a8,8,0,0,1-11.32,11.32l-80-80a8,8,0,0,1,0-11.32l80-80a8,8,0,0,1,11.32,11.32L91.31,128Z"/>
@@ -24,18 +36,7 @@ const style = applyTokenDefaults(`
   --font-size-sm: 13px;
 }
 
-.panel {
-  position: fixed;
-  width: var(--panel-width);
-  display: flex;
-  flex-direction: column;
-  background: var(--background);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-3);
-  z-index: 1000;
-  font-family: var(--font-sans);
-}
+${PANEL_CONTAINER_CSS}
 
 .time-section {
   display: flex;
@@ -55,95 +56,11 @@ const style = applyTokenDefaults(`
   padding: 0;
 }
 
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 10px;
-  border-bottom: 1px solid var(--border);
-}
-
-.nav-btn {
-  background: none;
-  border: none;
-  color: var(--text-medium);
-  cursor: pointer;
-  padding: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  transition: background 0.2s ease;
-}
-
-.nav-btn:hover {
-  background: var(--slate-90);
-}
-
-.month-year-btn,
-.year-btn {
-  background: none;
-  border: none;
-  color: var(--text);
-  font-size: var(--font-size-sm);
-  cursor: pointer;
-  padding: 4px 8px;
-  border-radius: var(--radius-sm);
-  transition: background 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  font-weight: 500;
-}
-
-.month-year-btn:hover,
-.year-btn:hover {
-  background: var(--cobalt-95);
-  color: var(--cobalt-50);
-}
-
-.decade-range {
-  flex: 1;
-  text-align: center;
-  font-size: var(--font-size-sm);
-  color: var(--text);
-  font-weight: 500;
-}
-
-.day-grid {
-  padding: 6px 10px;
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 4px;
-}
-
-.weekdays {
-  display: contents;
-}
-
-.weekday {
-  text-align: center;
-  font-size: 12px;
-  color: var(--text);
-  padding: 4px 0;
-  font-weight: 500;
-}
-
-.day-cell {
-  width: var(--cell-size);
-  height: var(--cell-size);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: none;
-  border: none;
-  color: var(--text);
-  cursor: pointer;
-  border-radius: 50%;
-  font-size: 13px;
-  transition: all 0.2s ease;
-}
+${PANEL_HEADER_CSS}
+${NAV_BTN_CSS}
+${HEADER_TOGGLE_BTNS_CSS}
+${DAY_GRID_LAYOUT_CSS}
+${DAY_CELL_BASE_CSS}
 
 .day-cell:hover:not(:disabled) {
   background: var(--cobalt-95);
@@ -153,14 +70,6 @@ const style = applyTokenDefaults(`
   color: var(--text-dim);
 }
 
-.day-cell[data-selected] {
-  background: var(--cobalt-50);
-  color: white;
-  font-weight: 500;
-}
-.day-cell[data-selected]:hover {
-  background: var(--cobalt-50);
-}
 .day-cell[data-today] {
   background: var(--slate-90);
 }
@@ -169,63 +78,8 @@ const style = applyTokenDefaults(`
   background: var(--cobalt-50);
 }
 
-.day-cell:disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-
-.month-grid,
-.year-grid {
-  padding: 12px;
-  display: grid;
-  gap: 8px;
-}
-
-.month-grid {
-  grid-template-columns: repeat(3, 1fr);
-}
-
-.year-grid {
-  grid-template-columns: repeat(2, 1fr);
-}
-
-.month-pill,
-.year-pill {
-  background: none;
-  border: none;
-  color: var(--text);
-  font-size: var(--font-size-sm);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-weight: 500;
-}
-.py-1 {
-  padding-block: calc(var(--spacing-sm) * 1);
-}
-
-.px-3 {
-  padding-inline: calc(var(--spacing-sm) * 3);
-}
-.px-4 {
-  padding-inline: calc(var(--spacing-sm) * 4);
-}
-.month-pill:hover,
-.year-pill:hover {
-  background: var(--cobalt-95);
-}
-
-.month-pill[data-selected],
-.year-pill[data-selected] {
-  background: var(--cobalt-50);
-  color: white;
-}
-
-.month-pill[data-current],
-.year-pill[data-current] {
-  background: var(--cobalt-50);
-  color: white;
-}
+${MONTH_YEAR_GRIDS_CSS}
+${UTILITY_SPACING_CSS}
 
 .footer {
   display: flex;
@@ -253,9 +107,8 @@ const style = applyTokenDefaults(`
   cursor: not-allowed;
 }
 
-[hidden] {
-  display: none !important;
-}
+${HIDDEN_CSS}
+${VALIDATION_BANNER_CSS}
 `);
 
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -278,10 +131,14 @@ export class DateTimePickerPanel extends HTMLElement {
   private timeSectionElement: HTMLElement | undefined;
   private timeEntryInput: HTMLElement | undefined;   // albert-time-entry
   private timezoneDisplay: HTMLElement | undefined;
+  private validationBannerElement: HTMLElement | undefined;
 
   private currentDate = new Date();
   private selectedDate: Date | null = null;
   private selectedTime: ParsedTime | null = null;
+  private minDate: Date | null = null;
+  private maxDate: Date | null = null;
+  private validationMessage: string | null = null;
   private anchorElement: HTMLElement | null = null;
   private view: 'day' | 'month' | 'year' = 'day';
   private documentClickListener: ((e: Event) => void) | null = null;
@@ -390,7 +247,16 @@ export class DateTimePickerPanel extends HTMLElement {
     footerElement.appendChild(this.nowBtn);
     footerElement.appendChild(this.clearBtn);
 
+    // Validation banner (hidden by default)
+    this.validationBannerElement = document.createElement('div');
+    this.validationBannerElement.setAttribute('part', 'validation-banner');
+    this.validationBannerElement.className = 'validation-banner';
+    this.validationBannerElement.setAttribute('data-hidden', '');
+    this.validationBannerElement.setAttribute('role', 'alert');
+    this.validationBannerElement.setAttribute('aria-live', 'polite');
+
     this.panelElement.appendChild(this.headerElement);
+    this.panelElement.appendChild(this.validationBannerElement);
     this.panelElement.appendChild(this.dayGridElement);
     this.panelElement.appendChild(this.monthGridElement);
     this.panelElement.appendChild(this.yearGridElement);
@@ -401,6 +267,8 @@ export class DateTimePickerPanel extends HTMLElement {
     this.shadow.appendChild(this.panelElement);
 
     this.renderDay();
+    // Flush any validationMessage that arrived via open() before the DOM existed.
+    this.updateValidationBanner();
   }
 
   private renderDay() {
@@ -444,11 +312,14 @@ export class DateTimePickerPanel extends HTMLElement {
 
     // Previous month days
     for (let i = firstDay - 1; i >= 0; i--) {
+      const day = daysInPrevMonth - i;
+      const cellDate = new Date(year, month - 1, day);
       const btn = document.createElement('button');
       btn.className = 'day-cell';
       btn.setAttribute('data-other-month', '');
-      btn.textContent = String(daysInPrevMonth - i);
+      btn.textContent = String(day);
       btn.disabled = true;
+      this.applyDayCellBounds(btn, cellDate);
       this.dayGridElement.appendChild(btn);
     }
 
@@ -469,6 +340,7 @@ export class DateTimePickerPanel extends HTMLElement {
 
       btn.tabIndex = -1;
       btn.addEventListener('click', () => this.selectDate(cellDate));
+      this.applyDayCellBounds(btn, cellDate);
       this.dayGridElement.appendChild(btn);
     }
 
@@ -476,15 +348,28 @@ export class DateTimePickerPanel extends HTMLElement {
     const totalCells = firstDay + daysInMonth;
     const remainingCells = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
     for (let day = 1; day <= remainingCells; day++) {
+      const cellDate = new Date(year, month + 1, day);
       const btn = document.createElement('button');
       btn.className = 'day-cell';
       btn.setAttribute('data-other-month', '');
       btn.textContent = String(day);
       btn.disabled = true;
+      this.applyDayCellBounds(btn, cellDate);
       this.dayGridElement.appendChild(btn);
     }
 
     this.initializeFocusedCell();
+    this.updateNavButtons();
+  }
+
+  private applyDayCellBounds(btn: HTMLButtonElement, date: Date): void {
+    const cellMidnight = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const isBeforeMin = this.minDate !== null && cellMidnight < this.minDate;
+    const isAfterMax = this.maxDate !== null && cellMidnight > this.maxDate;
+    if (isBeforeMin || isAfterMax) {
+      btn.disabled = true;
+      btn.setAttribute('data-out-of-range', '');
+    }
   }
 
   private renderMonth() {
@@ -524,9 +409,19 @@ export class DateTimePickerPanel extends HTMLElement {
         btn.setAttribute('data-current', '');
       }
 
+      const firstOfMonth = new Date(year, index, 1);
+      const lastOfMonth = new Date(year, index + 1, 0);
+      const isBeforeMin = this.minDate !== null && lastOfMonth < this.minDate;
+      const isAfterMax = this.maxDate !== null && firstOfMonth > this.maxDate;
+      if (isBeforeMin || isAfterMax) {
+        btn.disabled = true;
+      }
+
       btn.addEventListener('click', () => this.selectMonth(index));
       this.monthGridElement.appendChild(btn);
     });
+
+    this.updateNavButtons();
   }
 
   private renderYear() {
@@ -565,8 +460,45 @@ export class DateTimePickerPanel extends HTMLElement {
         btn.setAttribute('data-current', '');
       }
 
+      const isBeforeMin = this.minDate !== null && year < this.minDate.getFullYear();
+      const isAfterMax = this.maxDate !== null && year > this.maxDate.getFullYear();
+      if (isBeforeMin || isAfterMax) {
+        btn.disabled = true;
+      }
+
       btn.addEventListener('click', () => this.selectYear(year));
       this.yearGridElement.appendChild(btn);
+    }
+
+    this.updateNavButtons();
+  }
+
+  private updateNavButtons(): void {
+    const prevBtn = this.prevBtn
+      ?? this.shadowRoot?.querySelector('[aria-label="Previous"]') as HTMLButtonElement | null;
+    const nextBtn = this.nextBtn
+      ?? this.shadowRoot?.querySelector('[aria-label="Next"]') as HTMLButtonElement | null;
+
+    if (!prevBtn || !nextBtn) return;
+
+    const y = this.currentDate.getFullYear();
+    const m = this.currentDate.getMonth();
+
+    if (this.view === 'day') {
+      prevBtn.disabled = this.minDate !== null
+        && y === this.minDate.getFullYear()
+        && m <= this.minDate.getMonth();
+      nextBtn.disabled = this.maxDate !== null
+        && y === this.maxDate.getFullYear()
+        && m >= this.maxDate.getMonth();
+    } else if (this.view === 'month') {
+      prevBtn.disabled = this.minDate !== null && y <= this.minDate.getFullYear();
+      nextBtn.disabled = this.maxDate !== null && y >= this.maxDate.getFullYear();
+    } else if (this.view === 'year') {
+      const decade = Math.floor(y / 10) * 10;
+      prevBtn.disabled = this.minDate !== null && decade <= Math.floor(this.minDate.getFullYear() / 10) * 10;
+      nextBtn.disabled = this.maxDate !== null && (decade + 9) >= this.maxDate.getFullYear()
+        && decade >= Math.floor(this.maxDate.getFullYear() / 10) * 10;
     }
   }
 
@@ -712,6 +644,23 @@ export class DateTimePickerPanel extends HTMLElement {
     this.renderDay();
     const datetime = timeToIso(this.selectedDate, this.selectedTime!);
     this.dispatchChangeEvent(datetime);
+    this.validationMessage = null;
+    this.updateValidationBanner();
+  }
+
+  private updateValidationBanner() {
+    if (!this.validationBannerElement) return;
+    if (this.validationMessage) {
+      this.validationBannerElement.innerHTML = `
+        <svg class="validation-banner-icon" width="14" height="14" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M236.8,188.09,149.35,36.22a24.76,24.76,0,0,0-42.7,0L19.2,188.09a23.51,23.51,0,0,0,0,23.72A24.35,24.35,0,0,0,40.55,224h174.9a24.35,24.35,0,0,0,21.33-12.19A23.51,23.51,0,0,0,236.8,188.09ZM120,104a8,8,0,0,1,16,0v40a8,8,0,0,1-16,0Zm8,88a12,12,0,1,1,12-12A12,12,0,0,1,128,192Z"/>
+        </svg>
+        <span>${this.validationMessage}</span>`;
+      this.validationBannerElement.removeAttribute('data-hidden');
+    } else {
+      this.validationBannerElement.setAttribute('data-hidden', '');
+      this.validationBannerElement.textContent = '';
+    }
   }
 
   private selectNow() {
@@ -824,7 +773,24 @@ export class DateTimePickerPanel extends HTMLElement {
     this.anchorElement?.focus();
   }
 
-  public open(anchorElement: HTMLElement, initialValue?: string) {
+  public open(
+    anchorElement: HTMLElement,
+    initialValue?: string,
+    options?: { minDate?: Date | null; maxDate?: Date | null; validationMessage?: string | null },
+  ) {
+    const rawMin = options?.minDate ?? null;
+    const rawMax = options?.maxDate ?? null;
+    this.minDate = rawMin && !isNaN(rawMin.getTime()) ? rawMin : null;
+    this.maxDate = rawMax && !isNaN(rawMax.getTime()) ? rawMax : null;
+    if (this.minDate) {
+      this.minDate = new Date(this.minDate.getFullYear(), this.minDate.getMonth(), this.minDate.getDate());
+    }
+    if (this.maxDate) {
+      this.maxDate = new Date(this.maxDate.getFullYear(), this.maxDate.getMonth(), this.maxDate.getDate());
+    }
+    this.validationMessage = options?.validationMessage ?? null;
+    this.updateValidationBanner();
+
     this.anchorElement = anchorElement;
     if (initialValue) {
       // Parse via Date so the browser's timezone conversion applies, matching

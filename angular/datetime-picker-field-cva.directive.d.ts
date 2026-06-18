@@ -5,6 +5,9 @@ export declare class DateTimePickerFieldCvaDirective implements ControlValueAcce
     set required(value: boolean);
     set placeholder(value: string);
     set isEditable(value: boolean);
+    set minDate(value: string | null);
+    set maxDate(value: string | null);
+    set validationMessage(value: string | null);
     valueChange: EventEmitter<string | null>;
     panelClose: EventEmitter<void>;
     private onChange;

@@ -15,6 +15,9 @@ let DateTimePickerFieldCvaComponent = class DateTimePickerFieldCvaComponent {
         this.required = false;
         this.placeholder = 'Select a date and time';
         this.isEditable = true;
+        this.minDate = null;
+        this.maxDate = null;
+        this.validationMessage = null;
         this.valueChange = new EventEmitter();
         this.onChange = () => { };
         this.onTouched = () => { };
@@ -97,6 +100,24 @@ let DateTimePickerFieldCvaComponent = class DateTimePickerFieldCvaComponent {
             el.setAttribute('placeholder', this.placeholder);
         }
         el.setAttribute('is-editable', this.isEditable.toString());
+        if (this.minDate) {
+            el.setAttribute('min-date', this.minDate);
+        }
+        else {
+            el.removeAttribute('min-date');
+        }
+        if (this.maxDate) {
+            el.setAttribute('max-date', this.maxDate);
+        }
+        else {
+            el.removeAttribute('max-date');
+        }
+        if (this.validationMessage) {
+            el.setAttribute('validation-message', this.validationMessage);
+        }
+        else {
+            el.removeAttribute('validation-message');
+        }
     }
 };
 __decorate([
@@ -115,6 +136,18 @@ __decorate([
     Input(),
     __metadata("design:type", Object)
 ], DateTimePickerFieldCvaComponent.prototype, "isEditable", void 0);
+__decorate([
+    Input(),
+    __metadata("design:type", Object)
+], DateTimePickerFieldCvaComponent.prototype, "minDate", void 0);
+__decorate([
+    Input(),
+    __metadata("design:type", Object)
+], DateTimePickerFieldCvaComponent.prototype, "maxDate", void 0);
+__decorate([
+    Input(),
+    __metadata("design:type", Object)
+], DateTimePickerFieldCvaComponent.prototype, "validationMessage", void 0);
 __decorate([
     Output(),
     __metadata("design:type", Object)

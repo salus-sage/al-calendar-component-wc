@@ -78,6 +78,9 @@ export class ExampleComponent {
 - `required: boolean` — Mark field as required (default: `false`)
 - `placeholder: string` — Placeholder text (default: `"Select a date and time"`)
 - `isEditable: boolean` — Enable/disable the picker (default: `true`)
+- `minDate: string | null` — Optional. Earliest selectable date (`YYYY-MM-DD`). Disables all days, months, and years before this date in the panel.
+- `maxDate: string | null` — Optional. Latest selectable date (`YYYY-MM-DD`). Disables all days, months, and years after this date in the panel.
+- `validationMessage: string | null` — Optional. When non-null, a warning banner is shown inside the panel below the header. Automatically dismissed when the user picks a date.
 
 **Outputs:**
 - `valueChange: EventEmitter<string | null>` — Emits the selected ISO 8601 string whenever the value changes, or `null` when cleared. Fires in addition to the standard CVA path — works alongside `formControl`, `ngModel`, or with no form binding at all.
@@ -189,6 +192,9 @@ export class ExampleComponent {
 - `required: boolean`
 - `placeholder: string`
 - `isEditable: boolean`
+- `minDate: string | null` — Optional. Earliest selectable date (`YYYY-MM-DD`).
+- `maxDate: string | null` — Optional. Latest selectable date (`YYYY-MM-DD`).
+- `validationMessage: string | null` — Optional. When non-null, a warning banner is shown inside the panel. Automatically dismissed on date selection.
 
 **Outputs (both directives):**
 - `valueChange: EventEmitter<string | null>` — Emits the selected value string on every change, or `null` when cleared. Fires alongside the CVA `onChange` path so it works with `formControlName`, `formControl`, `ngModel`, or no form binding.
@@ -264,6 +270,224 @@ onFieldChange(fieldId: string, value: string | null) {
 
 ---
 
+---
+
+## Date bounds / validation
+
+Both `minDate` and `maxDate` accept a `YYYY-MM-DD` string. When set, the calendar panel:
+
+- Dims and disables day cells outside the range (carries `[data-out-of-range]` on the DOM element).
+- Disables month pills where the entire month is outside the range.
+- Disables year pills outside the range.
+- Disables the prev/next navigation arrows when the calendar reaches the boundary month or decade.
+
+### Approach A — component wrapper
+
+```typescript
+@Component({
+  selector: 'app-task-form',
+  template: `
+    <form [formGroup]="form">
+      <albert-datetime-picker-cva
+        formControlName="scheduledAt"
+        [minDate]="today"
+        [maxDate]="deadline"
+        placeholder="Select date and time"
+      ></albert-datetime-picker-cva>
+    </form>
+  `,
+})
+export class TaskFormComponent {
+  today = new Date().toISOString().split('T')[0]; // "2026-06-18"
+  deadline = '2026-12-31';
+
+  form = new FormGroup({
+    scheduledAt: new FormControl(null),
+  });
+}
+```
+
+### Approach B — directive on native element
+
+```typescript
+@Component({
+  selector: 'app-booking-form',
+  template: `
+    <form [formGroup]="form">
+      <!-- Date picker: only future dates within the project window -->
+      <albert-date-picker
+        formControlName="dueDate"
+        [minDate]="projectStart"
+        [maxDate]="projectEnd"
+        placeholder="Pick a due date"
+      ></albert-date-picker>
+
+      <!-- DateTime picker: no upper bound, only future datetimes -->
+      <albert-datetime-picker
+        formControlName="scheduledAt"
+        [minDate]="today"
+        placeholder="Select date and time"
+      ></albert-datetime-picker>
+    </form>
+  `,
+})
+export class BookingFormComponent {
+  today = new Date().toISOString().split('T')[0];
+  projectStart = '2026-07-01';
+  projectEnd = '2026-09-30';
+
+  form = new FormGroup({
+    dueDate: new FormControl(null),
+    scheduledAt: new FormControl(null),
+  });
+}
+```
+
+### Dynamic bounds
+
+Bind to component properties that change at runtime — the attribute is updated reactively via the setter:
+
+```typescript
+@Component({
+  template: `
+    <albert-date-picker
+      formControlName="endDate"
+      [minDate]="startDateControl.value"
+    ></albert-date-picker>
+  `,
+})
+export class DateRangeComponent {
+  form = new FormGroup({
+    startDate: new FormControl('2026-07-01'),
+    endDate: new FormControl(null),
+  });
+
+  get startDateControl() {
+    return this.form.get('startDate') as FormControl;
+  }
+}
+```
+
+### Edge cases
+
+| Scenario | Behaviour |
+|---|---|
+| `minDate` only | All dates before `minDate` are disabled; no upper bound |
+| `maxDate` only | All dates after `maxDate` are disabled; no lower bound |
+| `minDate > maxDate` | Every day is disabled — consumer must ensure a valid window |
+| `minDate === maxDate` | Only that single day is selectable |
+| Invalid string (e.g. `"not-a-date"`) | Silently ignored — no constraint applied |
+| `null` / `undefined` | Clears the constraint |
+
+---
+
+## Validation message banner
+
+Use `validationMessage` to display a contextual warning banner inside the calendar panel. The banner appears below the header and above the calendar grid, and is automatically dismissed when the user selects a date.
+
+This is distinct from Angular form validation — it is a **UX hint from the consumer** (e.g. "Date must be within the project timeline") surfaced directly inside the picker, before the user has made a choice.
+
+### Approach A — component wrapper
+
+```typescript
+@Component({
+  selector: 'app-task-form',
+  template: `
+    <form [formGroup]="form">
+      <albert-datetime-picker-cva
+        formControlName="scheduledAt"
+        [minDate]="today"
+        [validationMessage]="scheduledAtMessage"
+        placeholder="Select date and time"
+      ></albert-datetime-picker-cva>
+    </form>
+  `,
+})
+export class TaskFormComponent {
+  today = new Date().toISOString().split('T')[0];
+
+  form = new FormGroup({
+    scheduledAt: new FormControl(null),
+  });
+
+  get scheduledAtMessage(): string | null {
+    const ctrl = this.form.get('scheduledAt');
+    if (ctrl?.touched && ctrl.invalid) {
+      return 'Please select a future date and time.';
+    }
+    return null;
+  }
+}
+```
+
+### Approach B — directive on native element
+
+```typescript
+@Component({
+  selector: 'app-booking-form',
+  template: `
+    <form [formGroup]="form">
+      <albert-date-picker
+        formControlName="dueDate"
+        [minDate]="projectStart"
+        [maxDate]="projectEnd"
+        [validationMessage]="dueDateMessage"
+        placeholder="Pick a due date"
+      ></albert-date-picker>
+    </form>
+  `,
+})
+export class BookingFormComponent {
+  projectStart = '2026-07-01';
+  projectEnd   = '2026-09-30';
+
+  form = new FormGroup({
+    dueDate: new FormControl(null),
+  });
+
+  get dueDateMessage(): string | null {
+    return this.form.get('dueDate')?.touched && !this.form.get('dueDate')?.value
+      ? 'Due date must fall within the project window.'
+      : null;
+  }
+}
+```
+
+### Dynamic / backend-driven forms
+
+When the message is driven by API data or changes at runtime, bind it like any other property — the attribute is updated reactively:
+
+```html
+<albert-date-picker
+  *ngFor="let field of fields"
+  [placeholder]="field.label"
+  [minDate]="field.minDate"
+  [maxDate]="field.maxDate"
+  [validationMessage]="fieldErrors[field.id]"
+  (valueChange)="onFieldChange(field.id, $event)">
+</albert-date-picker>
+```
+
+```typescript
+fieldErrors: Record<string, string | null> = {};
+
+onValidate(fieldId: string, serverMessage: string | null) {
+  this.fieldErrors[fieldId] = serverMessage;
+}
+```
+
+### Behaviour reference
+
+| Scenario | Behaviour |
+|---|---|
+| `validationMessage` is set when panel opens | Banner shown immediately below header |
+| User picks a date | Banner dismissed; `albert-change` fires normally |
+| User clicks Clear | Panel closes; banner reappears on the next open if still set |
+| `validationMessage` set to `null` / removed | No banner on next open |
+| Banner appears alongside `minDate`/`maxDate` | Both constraints and the banner are active simultaneously |
+
+---
+
 ## Comparison
 
 | Feature | Approach A (Component) | Approach B (Directive) |
@@ -273,6 +497,8 @@ onFieldChange(fieldId: string, value: string | null) {
 | Standalone | No | Yes (Angular 15+) |
 | Extra DOM element | Yes (wrapper component) | No (direct on WC) |
 | `(valueChange)` output | Yes | Yes |
+| `minDate` / `maxDate` inputs | Yes | Yes |
+| `validationMessage` input | Yes | Yes |
 | Best for | Angular 10, NgModule projects | Angular 9+, standalone projects |
 
 ---
