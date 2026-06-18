@@ -208,6 +208,9 @@ export class TimeEntryField extends HTMLElement {
         suggestion.setAttribute('data-active', '');
       }
 
+      // Prevent input blur when clicking a suggestion so the click lands on the
+      // suggestion element rather than re-targeting to <html> after dropdown closes.
+      suggestion.addEventListener('mousedown', (e) => e.preventDefault());
       suggestion.addEventListener('click', () => this.selectOption(index));
 
       this.suggestionsContainer.appendChild(suggestion);
