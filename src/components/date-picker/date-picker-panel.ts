@@ -752,8 +752,13 @@ export class DatePickerPanel extends HTMLElement {
 
     if (initialValue) {
       const [year, month, day] = initialValue.split('-').map(Number);
-      this.selectedDate = new Date(year, month - 1, day);
-      this.currentDate = new Date(year, month - 1, 1);
+      if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
+        this.selectedDate = new Date(year, month - 1, day);
+        this.currentDate = new Date(year, month - 1, 1);
+      } else {
+        this.selectedDate = null;
+        this.currentDate = new Date();
+      }
     } else {
       this.selectedDate = null;
       this.currentDate = new Date();

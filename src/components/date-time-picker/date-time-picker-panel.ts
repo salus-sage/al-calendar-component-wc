@@ -830,12 +830,18 @@ export class DateTimePickerPanel extends HTMLElement {
       // Parse via Date so the browser's timezone conversion applies, matching
       // how formatDate() (the field display) reads the same ISO string.
       const d = new Date(initialValue);
-      const localYear = d.getFullYear();
-      const localMonth = d.getMonth();
-      const localDay = d.getDate();
-      this.selectedDate = new Date(localYear, localMonth, localDay);
-      this.currentDate = new Date(localYear, localMonth, 1);
-      this.selectedTime = dateToLocalTime(d);
+      if (!isNaN(d.getTime())) {
+        const localYear = d.getFullYear();
+        const localMonth = d.getMonth();
+        const localDay = d.getDate();
+        this.selectedDate = new Date(localYear, localMonth, localDay);
+        this.currentDate = new Date(localYear, localMonth, 1);
+        this.selectedTime = dateToLocalTime(d);
+      } else {
+        this.selectedDate = null;
+        this.selectedTime = null;
+        this.currentDate = new Date();
+      }
     } else {
       this.selectedDate = null;
       this.selectedTime = null;
