@@ -156,6 +156,105 @@ export function dateToIsoString(date: Date): string {
   return `${year}-${month}-${day}`;
 }
 
+/** ISO date-only pattern: YYYY-MM-DD (storage format for date parameters). */
+export const ISO_DATE_ONLY_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+/** Calendar years we accept — rejects JS quirks like 0326-09-20 → year 326. */
+export function isValidStoredYear(year: number, yearStr: string): boolean {
+  if (yearStr.startsWith('0')) {
+    return false;
+  }
+  return year >= 1000 && year <= 9999;
+}
+
+/**
+ * Parse a stored date-only ISO string (YYYY-MM-DD) or ISO timestamp (uses date part).
+ * Returns null for malformed values including leading-zero years (e.g. 0326-09-20).
+ */
+export function parseIsoDateOnly(value: string): Date | null {
+  const trimmed = value.trim();
+  const datePart = trimmed.includes('T') ? trimmed.split('T')[0] : trimmed;
+  const match = ISO_DATE_ONLY_RE.exec(datePart);
+  if (!match) {
+    return null;
+  }
+
+  const year = parseInt(match[1], 10);
+  const month = parseInt(match[2], 10);
+  const day = parseInt(match[3], 10);
+  if (!isValidStoredYear(year, match[1]) || month < 1 || month > 12 || day < 1 || day > 31) {
+    return null;
+  }
+
+  const date = new Date(year, month - 1, day);
+  if (
+    date.getFullYear() !== year ||
+    date.getMonth() !== month - 1 ||
+    date.getDate() !== day
+  ) {
+    return null;
+  }
+
+  return date;
+}
+
+/** Normalize a stored date parameter value to canonical YYYY-MM-DD, or '' if invalid. */
+export function normalizeIsoDateOnly(value: string | null | undefined): string {
+  if (!value) {
+    return '';
+  }
+  const parsed = parseIsoDateOnly(String(value));
+  return parsed ? dateToIsoString(parsed) : '';
+}
+
+/** Normalize a stored timestamp parameter value; rejects invalid calendar years. */
+export function normalizeIsoTimestamp(value: string | null | undefined): string {
+  if (!value) {
+    return '';
+  }
+  const trimmed = String(value).trim();
+  if (!trimmed.includes('T')) {
+    return normalizeIsoDateOnly(trimmed);
+  }
+
+  const d = new Date(trimmed);
+  if (isNaN(d.getTime()) || !isValidStoredYear(d.getFullYear(), String(d.getFullYear()))) {
+    return '';
+  }
+
+  return trimmed;
+}
+
+/**
+ * Resolve display locale from Albert user preference (ljs-lang) with browser fallback.
+ */
+export function getDisplayLocale(): string {
+  const localeMap: Record<string, string> = {
+    de: 'de-DE',
+    en: 'en-US',
+    fr: 'fr-FR',
+    es: 'es-ES',
+    it: 'it-IT',
+    pt: 'pt-BR',
+    ja: 'ja-JP',
+    zh: 'zh-CN',
+    ko: 'ko-KR',
+  };
+
+  try {
+    if (typeof localStorage !== 'undefined') {
+      const lang = (localStorage.getItem('ljs-lang') || '').toLowerCase().split(/[-_]/)[0];
+      if (lang && localeMap[lang]) {
+        return localeMap[lang];
+      }
+    }
+  } catch {
+    // localStorage may be unavailable
+  }
+
+  return typeof navigator !== 'undefined' ? navigator.language || 'en-US' : 'en-US';
+}
+
 export function generateTimeOptions(): ParsedTime[] {
   const options: ParsedTime[] = [];
   for (let i = 0; i < 24 * 4; i++) {

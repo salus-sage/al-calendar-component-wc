@@ -54,7 +54,8 @@ export class ReadOnlyDateCell extends HTMLElement {
     this.cellElement.classList.add('cell');
 
     this.valueElement.setAttribute('part', 'value');
-    this.valueElement.classList.add('value');
+    this.valueElement.classList.add('value', 'notranslate');
+    this.valueElement.setAttribute('translate', 'no');
 
     this.cellElement.appendChild(this.valueElement);
 

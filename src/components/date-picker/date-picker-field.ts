@@ -130,7 +130,8 @@ export class DatePickerField extends HTMLElement {
     this.fieldElement.setAttribute('aria-haspopup', 'dialog');
 
     this.valueElement.setAttribute('part', 'value');
-    this.valueElement.classList.add('value');
+    this.valueElement.classList.add('value', 'notranslate');
+    this.valueElement.setAttribute('translate', 'no');
 
     const iconEl = document.createElement('span');
     iconEl.setAttribute('part', 'icon');

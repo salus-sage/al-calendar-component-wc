@@ -10,5 +10,16 @@ export { ReadOnlyDateCell } from './components/read-only-date-cell/read-only-dat
 
 // Utilities
 export { formatDate } from './shared/format-date';
-export { parseTime, formatTime, timeToIso, generateTimeOptions, dateToLocalTime, dateToIsoString } from './shared/parse-time';
+export {
+  parseTime,
+  formatTime,
+  timeToIso,
+  generateTimeOptions,
+  dateToLocalTime,
+  dateToIsoString,
+  parseIsoDateOnly,
+  normalizeIsoDateOnly,
+  normalizeIsoTimestamp,
+  getDisplayLocale,
+} from './shared/parse-time';
 export type { ParsedTime } from './shared/parse-time';
